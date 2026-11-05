@@ -165,6 +165,10 @@ function applySettings(s: Settings): void {
   $<HTMLInputElement>('sShots').checked = s.screenshotsEnabled;
   shotsOn = s.screenshotsEnabled; renderShot();
 }
+$('settings').querySelectorAll<HTMLButtonElement>('.sizes button').forEach((b) => b.addEventListener('click', () => {
+  void api.invoke('window:setSize', { width: Number(b.dataset.w), height: Number(b.dataset.h) });
+}));
+$('sModel').textContent = api.env.whisperModel;
 const set = (p: Partial<Settings>) => api.invoke('settings:set', p);
 $('sTop').addEventListener('change', (e) => {
   const v = (e.target as HTMLInputElement).checked;

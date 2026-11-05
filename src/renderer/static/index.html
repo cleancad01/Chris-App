@@ -30,6 +30,12 @@
     <label>Opacity <input type="range" id="sOpacity" min="0.4" max="1" step="0.05"></label>
     <label>Transcript window (min) <input type="number" id="sWindow" min="1" max="60" style="width:56px"></label>
     <label><input type="checkbox" id="sShots"> Screenshots</label>
+    <div class="row sizes">
+      <button class="small" data-w="380" data-h="600">Compact (380x600)</button>
+      <button class="small" data-w="440" data-h="760">Normal (440x760)</button>
+      <button class="small" data-w="900" data-h="760">Wide (900x760)</button>
+    </div>
+    <div style="font-size:12px;color:var(--dim)">Local model: <span id="sModel"></span><br>Set TUTOR_WHISPER_MODEL=Xenova/whisper-tiny.en in .env for slower PCs</div>
   </div>
 </header>
 <div id="errors"></div>

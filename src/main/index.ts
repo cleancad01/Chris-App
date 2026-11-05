@@ -32,6 +32,8 @@ function handle<C extends IpcInvokeChannel>(
 }
 
 async function main(): Promise<void> {
+  // Pin userData so dev and packaged builds (productName differs) share %APPDATA%\tutor-copilot.
+  app.setPath('userData', path.join(app.getPath('appData'), 'tutor-copilot'));
   if (!app.requestSingleInstanceLock()) { app.quit(); return; }
   app.on('second-instance', () => {
     if (win) { if (win.isMinimized()) win.restore(); win.focus(); }
@@ -50,7 +52,8 @@ async function main(): Promise<void> {
     } catch { return new Response('not found', { status: 404 }); }
   });
 
-  loadEnv([path.join(app.getAppPath(), '.env'), path.join(app.getPath('userData'), '.env')]);
+  loadEnv([path.join(app.getAppPath(), '.env'), path.join(app.getPath('userData'), '.env'),
+    path.join(path.dirname(process.execPath), '.env')]);
   const dataDir = process.env.TUTOR_DATA_DIR || path.join(app.getPath('userData'), 'data');
   const storage = createStorage(dataDir);
   const llm: LlmClient = process.env.TUTOR_MOCK_LLM === '1' ? new MockLlmClient() : new AnthropicLlmClient();
@@ -119,6 +122,7 @@ async function main(): Promise<void> {
   handle('transcriber:status', ({ ready, status }) => { lesson.setTranscriberStatus(ready, status); });
   handle('window:setOpacity', (o) => { win?.setOpacity(Math.min(1, Math.max(0.3, o))); });
   handle('window:setAlwaysOnTop', (v) => { win?.setAlwaysOnTop(v); });
+  handle('window:setSize', ({ width, height }) => { win?.setSize(Math.round(width), Math.round(height), true); });
   handle('shell:openPath', async (p) => { await shell.openPath(p); });
 
   app.on('window-all-closed', () => app.quit());

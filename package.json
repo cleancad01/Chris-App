@@ -12,7 +12,8 @@
     "start": "npm run build && electron .",
     "dev": "npm run build && cross-env TUTOR_MOCK_AUDIO=1 electron .",
     "capture-test": "node scripts/build.mjs --capture-test && electron dist/capture-test/main.js",
-    "check": "npm run typecheck && npm run test && npm run build"
+    "check": "npm run typecheck && npm run test && npm run build",
+    "dist": "npm run build && electron-builder --win nsis"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "1.5.0",
@@ -23,5 +24,29 @@
     "esbuild": "0.28.2",
     "typescript": "5.9.3",
     "vitest": "5.1.0"
+  },
+  "devDependencies": {
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "com.tutorcopilot.app",
+    "productName": "Tutor Copilot",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }

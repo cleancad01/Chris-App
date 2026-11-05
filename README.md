@@ -83,7 +83,7 @@ A "(near) silent" warning in the summary means that stream captured nothing. Run
 
 ## Data storage
 
-Default location `%APPDATA%\tutor-copilot\data` (override with `TUTOR_DATA_DIR`):
+The app pins Electron's userData folder to `%APPDATA%\tutor-copilot` in both dev and packaged builds. Default data location `%APPDATA%\tutor-copilot\data` (override with `TUTOR_DATA_DIR`):
 
 ```
 <dataDir>/
@@ -97,6 +97,12 @@ Default location `%APPDATA%\tutor-copilot\data` (override with `TUTOR_DATA_DIR`)
 ```
 
 `report.md` contains: Overview, What the student learned, Not yet learned, Where they struggled, Suggested next steps, Concept roadmap, and the Full transcript.
+
+## Building an installer
+
+On Windows run `npm run dist`. The installer is written to `release/Tutor Copilot Setup 0.1.0.exe` (NSIS, lets you pick the install folder).
+
+After installing, put your `.env` in `%APPDATA%\tutor-copilot\.env` (userData) or next to `Tutor Copilot.exe`. The app pins userData to `%APPDATA%\tutor-copilot` (rather than Electron's default `%APPDATA%\Tutor Copilot` for a packaged build), so dev and installed builds share the same `.env` and data. Set `TUTOR_WHISPER_MODEL=Xenova/whisper-tiny.en` there for slower PCs.
 
 ## Cost notes
 

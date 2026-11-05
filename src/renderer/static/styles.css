@@ -8,6 +8,7 @@ button.primary{background:var(--acc);border-color:var(--acc);color:#fff}
 button.small{padding:5px 9px}
 header{padding:8px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
 .row{display:flex;gap:6px;align-items:center}.row.end{justify-content:flex-end}
+.row.sizes{flex-wrap:wrap}.row.sizes button{flex:1;white-space:nowrap;padding:5px 4px;font-size:12px}
 .row select{flex:1;min-width:0}.row input{flex:1;min-width:0}
 .pill{margin-left:auto;font-size:12px;padding:3px 10px;border-radius:99px;background:var(--panel);border:1px solid var(--line);color:var(--dim)}
 .pill.live{color:var(--tutor)}

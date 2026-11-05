@@ -33,6 +33,7 @@ export interface IpcInvoke {
   'transcriber:status': { arg: { ready: boolean; status: string }; result: void };
   'window:setOpacity': { arg: number; result: void };
   'window:setAlwaysOnTop': { arg: boolean; result: void };
+  'window:setSize': { arg: { width: number; height: number }; result: void };
   'shell:openPath': { arg: string; result: void };
 }
 

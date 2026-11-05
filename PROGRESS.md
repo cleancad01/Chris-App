@@ -9,6 +9,7 @@
 - [x] Capture test passed on the user's Windows machine (mic + loopback + screenshot). Loopback now requests raw audio (no echo cancellation / noise suppression / AGC).
 
 - [x] Full end-to-end lesson verified on the user's Windows machine: Whisper worker, speaker labels, Help-me (screenshot was used), report saved. Fixed: window.prompt unsupported in Electron; trailing chunks after End lesson raised errors.
+- [x] Tier 3 polish: electron-builder NSIS installer (`npm run dist`), window-size presets (`window:setSize`), local model note in settings, `.env` also read next to the exe.
 
 ## Decisions
 - Renderer is served via custom `app://tutor/` scheme (privileged, secure) with an explicit extension->MIME map and path-traversal guard, because file:// origins are opaque and cannot use the Cache API.
@@ -20,6 +21,8 @@
 - Storage: JSON + Markdown under `%APPDATA%/tutor-copilot/data/students/<id>/...` (override with `TUTOR_DATA_DIR`).
 - TypeScript 5.9 (not 7.x) for tooling stability. No native modules.
 - Branch: work is pushed to `main` (user request) and mirrored to `claude/elegant-babbage-fvxtr3`.
+
+- userData is pinned to `%APPDATA%\tutor-copilot` via `app.setPath` so dev and packaged builds share `.env` and data.
 
 ## Next
 - Waiting for the user's `npm run capture-test` output from Windows; fix mic/loopback/Whisper issues it reveals.
