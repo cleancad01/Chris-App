@@ -1,5 +1,6 @@
-import { app, BrowserWindow, desktopCapturer, ipcMain, session, shell } from 'electron';
+import { app, BrowserWindow, desktopCapturer, ipcMain, protocol, session, shell } from 'electron';
 import * as path from 'node:path';
+import { promises as fs } from 'node:fs';
 import type { IpcInvoke, IpcInvokeChannel } from '../shared/ipc';
 import {
   AnthropicLlmClient, MockLlmClient, createHelpMeService, createReportGenerator,
@@ -11,6 +12,17 @@ import type { LlmClient } from '../shared/interfaces';
 
 
 let win: BrowserWindow | undefined;
+
+protocol.registerSchemesAsPrivileged([{
+  scheme: 'app',
+  privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true },
+}]);
+
+const MIME: Record<string, string> = {
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.wasm': 'application/wasm',
+  '.png': 'image/png', '.svg': 'image/svg+xml', '.map': 'application/json',
+};
 
 function handle<C extends IpcInvokeChannel>(
   channel: C,
@@ -26,6 +38,18 @@ async function main(): Promise<void> {
   });
   await app.whenReady();
 
+  const rendererDir = path.join(__dirname, '..', 'renderer');
+  protocol.handle('app', async (req) => {
+    let p = decodeURIComponent(new URL(req.url).pathname);
+    if (p === '/' || p === '') p = '/index.html';
+    const file = path.normalize(path.join(rendererDir, p));
+    if (!file.startsWith(rendererDir + path.sep)) return new Response('forbidden', { status: 403 });
+    try {
+      const body = await fs.readFile(file);
+      return new Response(body, { headers: { 'content-type': MIME[path.extname(file).toLowerCase()] ?? 'application/octet-stream' } });
+    } catch { return new Response('not found', { status: 404 }); }
+  });
+
   loadEnv([path.join(app.getAppPath(), '.env'), path.join(app.getPath('userData'), '.env')]);
   const dataDir = process.env.TUTOR_DATA_DIR || path.join(app.getPath('userData'), 'data');
   const storage = createStorage(dataDir);
@@ -33,7 +57,7 @@ async function main(): Promise<void> {
   const helpMe = createHelpMeService(llm);
   const reports = createReportGenerator(llm);
   const settings = await storage.getSettings();
-  const screen = createScreenCapture({ enabled: settings.screenshotsEnabled });
+  const screen = createScreenCapture({ enabled: true }); // gated by settings.screenshotsEnabled at start/toggle
   const lesson = new LessonSession({
     storage, helpMe, reports, screen, windowSegments,
     hasApiKey: () => llm.isConfigured(),
@@ -61,15 +85,21 @@ async function main(): Promise<void> {
   });
   win.setMenuBarVisibility(false);
   win.on('closed', () => { win = undefined; });
-  void win.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
+  void win.loadURL('app://tutor/index.html');
 
   lesson.onChange((s) => { if (win && !win.isDestroyed()) win.webContents.send('state:changed', s); });
 
   handle('app:getState', () => lesson.getState());
   handle('settings:get', () => storage.getSettings());
+  const startShots = (s: { screenshotIntervalSec: number }) => screen.start(s.screenshotIntervalSec * 1000, (shot) => {
+    win?.webContents.send('screenshot:updated', { capturedAt: shot.capturedAt, width: shot.width, height: shot.height });
+  });
   handle('settings:set', async (patch) => {
     const next = { ...(await storage.getSettings()), ...patch };
     await storage.saveSettings(next);
+    if (lesson.getState().status === 'running') {
+      if (next.screenshotsEnabled) startShots(next); else screen.stop();
+    }
     return next;
   });
   handle('students:list', () => storage.listStudents());
@@ -77,12 +107,10 @@ async function main(): Promise<void> {
   handle('lesson:start', async ({ studentId, subject }) => {
     const l = await lesson.start(studentId, subject);
     const s = await storage.getSettings();
-    if (s.screenshotsEnabled) screen.start(s.screenshotIntervalSec * 1000, (shot) => {
-      win?.webContents.send('screenshot:updated', { capturedAt: shot.capturedAt, width: shot.width, height: shot.height });
-    });
+    if (s.screenshotsEnabled) startShots(s);
     return l;
   });
-  handle('lesson:end', () => lesson.end());
+  handle('lesson:end', async () => { try { return await lesson.end(); } finally { screen.stop(); } });
   handle('transcript:append', (segs) => lesson.appendTranscript(segs));
   handle('transcript:get', () => lesson.getTranscript());
   handle('helpme:ask', ({ windowMinutes }) => lesson.helpMe(windowMinutes));

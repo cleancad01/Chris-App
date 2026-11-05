@@ -144,6 +144,7 @@ function applySettings(s: Settings): void {
   $<HTMLInputElement>('sOpacity').value = String(s.opacity);
   $<HTMLInputElement>('sWindow').value = String(s.transcriptWindowMinutes);
   $<HTMLInputElement>('sShots').checked = s.screenshotsEnabled;
+  shotsOn = s.screenshotsEnabled; renderShot();
 }
 const set = (p: Partial<Settings>) => api.invoke('settings:set', p);
 $('sTop').addEventListener('change', (e) => {
@@ -158,8 +159,18 @@ $('sWindow').addEventListener('change', (e) => {
   const v = Math.min(60, Math.max(1, Number((e.target as HTMLInputElement).value) || 5));
   void set({ transcriptWindowMinutes: v });
 });
-$('sShots').addEventListener('change', (e) => void set({ screenshotsEnabled: (e.target as HTMLInputElement).checked }));
+$('sShots').addEventListener('change', (e) => {
+  shotsOn = (e.target as HTMLInputElement).checked; renderShot();
+  void set({ screenshotsEnabled: shotsOn });
+});
 
+let shotsOn = true;
+let shotAt: number | undefined;
+function renderShot(): void {
+  $('shotInd').textContent = !shotsOn ? 'screen: off'
+    : shotAt ? `screen \u2713 ${new Date(shotAt).toLocaleTimeString([], { hour12: false })}` : 'screen: on';
+}
+api.on('screenshot:updated', (e) => { shotAt = e.capturedAt; renderShot(); });
 api.on('state:changed', (s) => { state = s; render(); });
 
 (async () => {

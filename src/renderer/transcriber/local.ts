@@ -11,7 +11,7 @@ export class LocalWhisperTranscriber implements Transcriber {
   private pending = new Map<number, { resolve: (t: string) => void; reject: (e: Error) => void }>();
   private queue: Promise<unknown> = Promise.resolve();
 
-  constructor(private model: string, private workerUrl = 'whisper.worker.js') {}
+  constructor(private model: string, private workerUrl = new URL('whisper.worker.js', document.baseURI).toString()) {}
 
   init(onProgress?: (p: TranscriberProgress) => void): Promise<void> {
     // Relative URL resolves against dist/renderer/index.html.
