@@ -63,7 +63,7 @@ Set in `.env` or the shell.
 | `TUTOR_MOCK_AUDIO=1` | Fake audio plus a scripted mock transcript, no mic needed. Use `npm run dev`. |
 | `TUTOR_MOCK_LLM=1` | Fake model answers; no API cost. |
 | `TUTOR_TRANSCRIBER` | `local`, `hosted` or `mock`. Default: `mock` with mock audio, `hosted` if `OPENAI_API_KEY` is set, else `local`. |
-| `TUTOR_WHISPER_MODEL` | Local model. Default `Xenova/whisper-base.en`; `Xenova/whisper-tiny.en` is faster on slow PCs. |
+| `TUTOR_WHISPER_MODEL` | Local model (overrides the settings popover choice). Default `Xenova/whisper-tiny.en`; `Xenova/whisper-base.en` is more accurate but may lag. |
 | `TUTOR_WASM_THREADS=0` | Disables multi-threaded Whisper WASM (drops the COOP/COEP headers on `app://`). Use it if the Whisper model fails to load. |
 | `TUTOR_DATA_DIR` | Data folder. Default `%APPDATA%\tutor-copilot\data`. |
 
@@ -111,7 +111,7 @@ At the end of every lesson a short entry (date, subject, summary, key concepts) 
 
 On Windows run `npm run dist`. The installer is written to `release/Tutor Copilot Setup 0.1.0.exe` (NSIS, lets you pick the install folder).
 
-After installing, put your `.env` in `%APPDATA%\tutor-copilot\.env` (userData) or next to `Tutor Copilot.exe`. The app pins userData to `%APPDATA%\tutor-copilot` (rather than Electron's default `%APPDATA%\Tutor Copilot` for a packaged build), so dev and installed builds share the same `.env` and data. Set `TUTOR_WHISPER_MODEL=Xenova/whisper-tiny.en` there for slower PCs.
+After installing, put your `.env` in `%APPDATA%\tutor-copilot\.env` (userData) or next to `Tutor Copilot.exe`. The app pins userData to `%APPDATA%\tutor-copilot` (rather than Electron's default `%APPDATA%\Tutor Copilot` for a packaged build), so dev and installed builds share the same `.env` and data. The default model is `Xenova/whisper-tiny.en`; switch to base in settings or set `TUTOR_WHISPER_MODEL=Xenova/whisper-base.en` there.
 
 ## Cost notes
 

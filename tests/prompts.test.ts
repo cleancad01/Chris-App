@@ -27,6 +27,11 @@ describe('help-me prompt', () => {
     expect(text).toContain('Did fractions');
     expect(text).toContain('Started equations');
   });
+  it('includes the tutor question when given', () => {
+    const { content } = buildHelpMePrompt({ ...req, question: 'Why subtract 3?' });
+    const text = content.filter((b) => b.type === 'text').map((b: any) => b.text).join('\n');
+    expect(text).toContain("The tutor's specific question right now: Why subtract 3?");
+  });
   it('works without screenshot and truncates long transcripts keeping the end', () => {
     const many = Array.from({ length: 2000 }, (_, i) => seg('tutor', `line number ${i}`, 1_700_000_000_000 + i));
     const { content } = buildHelpMePrompt({ ...req, screenshot: undefined, transcript: many });

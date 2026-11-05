@@ -39,7 +39,7 @@ export const SCREEN = {
 export const DEFAULT_SETTINGS = {
   transcriptWindowMinutes: 5,
   transcriber: 'local' as const,
-  whisperModel: 'Xenova/whisper-base.en',
+  whisperModel: 'Xenova/whisper-tiny.en',
   screenshotIntervalSec: 10,
   screenshotsEnabled: true,
   alwaysOnTop: true,

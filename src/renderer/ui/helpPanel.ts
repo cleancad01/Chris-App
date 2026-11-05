@@ -5,11 +5,13 @@ import { segmentEl } from './transcriptView';
 export class HelpPanel {
   private panel = $('help');
   private btn = $<HTMLButtonElement>('helpBtn');
+  private q = $<HTMLInputElement>('helpQ');
   private busy = false;
   private enabled = false;
   private last?: HelpMeResult;
 
-  constructor(private ask: () => Promise<HelpMeResult>) {
+  constructor(private ask: (question: string) => Promise<HelpMeResult>) {
+    this.q.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); void this.run(); } });
     this.btn.addEventListener('click', () => void this.run());
     window.api.on('helpme:trigger', () => { void this.run(); });
     window.api.on('helpme:partial', (t) => this.showPartial(t));
@@ -31,7 +33,7 @@ export class HelpPanel {
   async run(): Promise<void> {
     if (this.busy || !this.enabled) return;
     this.busy = true; this.sync(); this.panel.replaceChildren();
-    try { this.last = await this.ask(); }
+    try { this.last = await this.ask(this.q.value.trim()); if (this.last.ok) this.q.value = ''; }
     catch (e) { this.last = { ok: false, error: e instanceof Error ? e.message : String(e), fallbackTranscript: [] }; }
     this.busy = false; this.sync(); this.render();
   }

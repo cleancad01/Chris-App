@@ -10,7 +10,7 @@
 - Both streams go through `AudioContext({sampleRate:16000})` (Chromium resamples) and a `ScriptProcessorNode`
   (1 channel, speaker downmix) into `PcmChunker`, which emits `AUDIO.chunkSeconds` (4 s) `AudioChunk`s with wall-clock timestamps and
   drops chunks with RMS < `AUDIO.silenceRms` (0.005).
-- Transcription: `LocalWhisperTranscriber` runs `Xenova/whisper-base.en` (q8, WASM) in `whisper.worker.js`.
+- Transcription: `LocalWhisperTranscriber` runs `Xenova/whisper-tiny.en` by default (q8, WASM) in `whisper.worker.js`.
   The model (~80 MB) downloads from Hugging Face on first run and is kept in the Cache API; later runs are offline
   except the ONNX Runtime `.wasm` (loaded from jsDelivr, then HTTP-cached). Output is filtered by
   `cleanTranscriptText` (drops `[BLANK_AUDIO]`, `(silence)`, lone/repeated "Thank you.", etc.).
@@ -38,6 +38,6 @@
   thing, so if `system.wav` is silent while audio plays, keep the video track alive instead.
 - Module workers loaded from `file://` and the jsDelivr ONNX Runtime download are untested here (no display in CI);
   first-run model download needs internet. whisper-base on WASM takes ~1-3 s per 4 s chunk on a typical laptop;
-  if it falls behind, switch the model to `Xenova/whisper-tiny.en` or the hosted transcriber.
+  if it falls behind, switch the model to `Xenova/whisper-tiny.en` (the default; base is slower) or the hosted transcriber.
 - `ScriptProcessorNode` is deprecated but still supported in Chromium; it runs on the main thread, so a very busy
   renderer can drop audio frames.

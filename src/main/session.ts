@@ -88,7 +88,7 @@ export class LessonSession {
     await this.deps.storage.appendTranscript(this.student.id, this.lesson.id, segments);
   }
 
-  async helpMe(windowMinutes?: number, onDelta?: (partialAnswer: string) => void): Promise<HelpMeResult> {
+  async helpMe(windowMinutes?: number, question?: string, onDelta?: (partialAnswer: string) => void): Promise<HelpMeResult> {
     if (!this.lesson || !this.student) {
       return { ok: false, error: 'No lesson in progress', fallbackTranscript: [] };
     }
@@ -110,6 +110,7 @@ export class LessonSession {
     const result = await this.deps.helpMe.ask({
       transcript: windowed,
       screenshot: this.deps.screen.latest(),
+      ...(question?.trim() ? { question: question.trim() } : {}),
       context: {
         studentName: this.student.name,
         subject: this.lesson.subject,

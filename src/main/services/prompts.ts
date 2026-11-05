@@ -40,7 +40,7 @@ ${prior}${c.priorContext ? `\nNotes from past lessons:\n${c.priorContext}` : ''}
 ## Recent transcript
 ${transcript}
 
-Respond with the JSON object now.`,
+Respond with the JSON object now.${req.question ? `\n\nThe tutor's specific question right now: ${req.question}. Answer THIS question directly in the answer field.` : ''}`,
   });
   return { system: HELPME_SYSTEM, content };
 }

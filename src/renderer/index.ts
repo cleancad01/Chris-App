@@ -8,7 +8,7 @@ import { HelpPanel } from './ui/helpPanel';
 
 const api = window.api;
 const view = new TranscriptView();
-const help = new HelpPanel(() => api.invoke('helpme:ask', {}));
+const help = new HelpPanel((q) => api.invoke('helpme:ask', q ? { question: q } : {}));
 
 let state: AppState | undefined;
 let sources: AudioSource[] = [];
@@ -49,13 +49,19 @@ function render(): void {
   startEnd.classList.toggle('primary', !running);
   startEnd.disabled = busy || state.status === 'ending';
   studentSel.disabled = subject.disabled = memoryChk.disabled = state.status !== 'idle';
+  pauseBtn.hidden = !running;
+  pauseBtn.textContent = paused ? 'Resume' : 'Pause';
   const pill = $('pill');
-  pill.textContent = pillOverride ?? (state.status === 'idle' ? 'Idle' : state.transcriberStatus);
+  pill.textContent = (running && paused) ? 'Paused' : pillOverride ?? (state.status === 'idle' ? 'Idle' : state.transcriberStatus);
   pill.classList.toggle('live', running && state.transcriberReady);
   help.setEnabled(running);
   $('mTutor').style.width = `${Math.min(100, state.audioLevels.tutor * 300)}%`;
   $('mStudent').style.width = `${Math.min(100, state.audioLevels.student * 300)}%`;
 }
+
+let paused = false;
+const pauseBtn = $<HTMLButtonElement>('pauseBtn');
+pauseBtn.addEventListener('click', () => { paused = !paused; render(); });
 
 const memoryChk = $<HTMLInputElement>('memory');
 let studentList: Student[] = [];
@@ -112,7 +118,7 @@ async function beginLesson(): Promise<void> {
   busy = true; render();
   try {
     $('errors').replaceChildren();
-    view.clear(); help.reset();
+    view.clear(); help.reset(); paused = false;
     await api.invoke('lesson:start', { studentId, subject: subject.value.trim() || undefined });
     const s = await api.invoke('settings:get', undefined);
     const { tutor, student } = createAudioSources({ mock: api.env.mockAudio });
@@ -125,7 +131,7 @@ async function beginLesson(): Promise<void> {
     setStatus(true, 'Listening');
     const onChunk = async (chunk: AudioChunk): Promise<void> => {
       // Trailing chunks can arrive after End lesson (sources flush while stopping): ignore them quietly.
-      if (transcriber !== tr) return;
+      if (paused || transcriber !== tr) return;
       try {
         const segs: TranscriptSegment[] = await tr.transcribe(chunk);
         if (!segs.length || transcriber !== tr) return;
@@ -166,6 +172,7 @@ async function beginLesson(): Promise<void> {
 }
 
 async function endLesson(): Promise<void> {
+  paused = false;
   busy = true; render();
   $('errors').replaceChildren();
   if (levelTimer) clearInterval(levelTimer);
@@ -199,13 +206,14 @@ function applySettings(s: Settings): void {
   $<HTMLInputElement>('sOpacity').value = String(s.opacity);
   $<HTMLInputElement>('sWindow').value = String(s.transcriptWindowMinutes);
   $<HTMLInputElement>('sShots').checked = s.screenshotsEnabled;
+  $<HTMLSelectElement>('sModel').value = s.whisperModel;
   shotsOn = s.screenshotsEnabled; renderShot();
 }
 $('settings').querySelectorAll<HTMLButtonElement>('.sizes button').forEach((b) => b.addEventListener('click', () => {
   void api.invoke('window:setSize', { width: Number(b.dataset.w), height: Number(b.dataset.h) });
 }));
-$('sModel').textContent = api.env.whisperModel;
 const set = (p: Partial<Settings>) => api.invoke('settings:set', p);
+$('sModel').addEventListener('change', (e) => { void set({ whisperModel: (e.target as HTMLSelectElement).value }); });
 $('sTop').addEventListener('change', (e) => {
   const v = (e.target as HTMLInputElement).checked;
   void set({ alwaysOnTop: v }); void api.invoke('window:setAlwaysOnTop', v);

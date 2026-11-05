@@ -16,7 +16,7 @@ const api: RendererApi = {
   env: {
     mockAudio,
     transcriber,
-    whisperModel: e.TUTOR_WHISPER_MODEL || 'Xenova/whisper-base.en',
+    whisperModel: e.TUTOR_WHISPER_MODEL || '',
     hostedApiKey: e.OPENAI_API_KEY,
   },
 };

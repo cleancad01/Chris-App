@@ -129,7 +129,7 @@ async function main(): Promise<void> {
   handle('lesson:end', async () => { try { return await lesson.end(); } finally { screen.stop(); } });
   handle('transcript:append', (segs) => lesson.appendTranscript(segs));
   handle('transcript:get', () => lesson.getTranscript());
-  handle('helpme:ask', ({ windowMinutes }) => lesson.helpMe(windowMinutes, (partial) => win?.webContents.send('helpme:partial', partial)));
+  handle('helpme:ask', ({ windowMinutes, question }) => lesson.helpMe(windowMinutes, question, (partial) => win?.webContents.send('helpme:partial', partial)));
   handle('screenshot:latest', () => screen.latest());
   handle('audio:levels', (l) => { lesson.setLevels(l); });
   handle('transcriber:status', ({ ready, status }) => { lesson.setTranscriberStatus(ready, status); });

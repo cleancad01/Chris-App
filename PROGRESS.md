@@ -1,6 +1,7 @@
 # PROGRESS
 
 ## Done
+- Help-me specific question box, Pause/Resume recording, default Whisper model tiny.en with settings select.
 - [x] M0: Project scaffold (Electron 45, esbuild, Vitest, TS), shared types/interfaces/IPC/config, ARCHITECTURE.md.
 
 - [x] M1 (Tier 1 code complete, untested on real hardware): dual audio capture (mic + Electron loopback), Whisper worker (transformers.js) + hosted (OpenAI) + mock transcribers, storage, Anthropic LLM client, Help-me service (timeout + retry, never blank), report generator, Electron shell + UI with consent dialog, `npm run capture-test`. 49 unit tests pass. Verified here: build, typecheck, tests with mocks. NOT verified here: mic/loopback capture, Whisper in Electron worker, UI rendering.

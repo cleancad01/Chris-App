@@ -19,6 +19,7 @@
   </div>
   <div class="row">
     <button id="startEnd" class="primary">Start lesson</button>
+    <button id="pauseBtn" hidden>Pause</button>
     <span id="shotInd" style="font-size:12px;color:var(--dim)">screen: off</span>
     <span id="pill" class="pill">Idle</span>
   </div>
@@ -36,12 +37,13 @@
       <button class="small" data-w="520" data-h="860">Normal (520x860)</button>
       <button class="small" data-w="900" data-h="760">Wide (900x760)</button>
     </div>
-    <div style="font-size:12px;color:var(--dim)">Local model: <span id="sModel"></span><br>Set TUTOR_WHISPER_MODEL=Xenova/whisper-tiny.en in .env for slower PCs</div>
+    <label>Model <select id="sModel"><option value="Xenova/whisper-tiny.en">tiny - fastest</option><option value="Xenova/whisper-base.en">base - more accurate, may lag</option></select></label>
   </div>
 </header>
 <div id="errors"></div>
 <main id="transcript" class="transcript"><div class="empty">Transcript will appear here.</div></main>
 <section id="help" class="help"></section>
+<input id="helpQ" class="helpq" placeholder="Optional: ask a specific question…" style="margin:8px 8px 0" />
 <button id="helpBtn" class="helpbtn" disabled>Help me <small>(F9)</small></button>
 <div id="toast" class="toast" hidden></div>
 <div id="newStudentModal" class="modal" hidden>

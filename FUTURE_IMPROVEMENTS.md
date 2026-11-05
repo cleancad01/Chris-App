@@ -5,10 +5,10 @@ Verified on the author's Windows 11 PC: capture test, full lesson with Whisper t
 
 ## Next up (ranked, agreed with the user at the end of the build session)
 Batch A - felt in every lesson
-1. **Ask a specific question**: a text box next to Help me ("explain this a simpler way", "is the student's answer right?"); the model answers that question with the same transcript + screenshot context.
+1. DONE (2026-11-05) **Ask a specific question**: a text box next to Help me ("explain this a simpler way", "is the student's answer right?"); the model answers that question with the same transcript + screenshot context.
 2. **Answer history**: scroll back through earlier Help-me answers within the lesson instead of losing them on the next press.
-3. **Pause recording button**: mutes both streams for private moments without ending the lesson.
-4. **Default to `Xenova/whisper-tiny.en`** with a model dropdown in settings (tiny kept up in real time on the test PC; base lagged 10-15 s).
+3. DONE (2026-11-05) **Pause recording button**: mutes both streams for private moments without ending the lesson.
+4. DONE (2026-11-05) **Default to `Xenova/whisper-tiny.en`** with a model dropdown in settings (tiny kept up in real time on the test PC; base lagged 10-15 s).
 
 Batch B - resilience and convenience
 5. **Lesson history panel**: list a student's past lessons with Open buttons for `report.md` (today only the end-of-lesson toast links to it).

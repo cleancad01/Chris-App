@@ -96,6 +96,8 @@ export interface HelpMeRequest {
   transcript: TranscriptSegment[];
   screenshot?: Screenshot;
   context: LessonContext;
+  /** Tutor's optional specific question. */
+  question?: string;
 }
 
 export type ConnectionSource = 'this-lesson' | 'past-lesson' | 'new';
@@ -143,7 +145,7 @@ export type TranscriberKind = 'local' | 'hosted' | 'mock';
 export interface Settings {
   transcriptWindowMinutes: number; // default 5
   transcriber: TranscriberKind; // default 'local'
-  whisperModel: string; // default 'Xenova/whisper-base.en'
+  whisperModel: string; // default 'Xenova/whisper-tiny.en'
   screenshotIntervalSec: number; // default 10
   screenshotsEnabled: boolean; // default true
   alwaysOnTop: boolean; // default true

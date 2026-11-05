@@ -28,7 +28,7 @@ export interface IpcInvoke {
   'transcript:append': { arg: TranscriptSegment[]; result: void };
   'transcript:get': { arg: void; result: TranscriptSegment[] };
   /** Help-me. Main gathers transcript window + latest screenshot + context itself. */
-  'helpme:ask': { arg: { windowMinutes?: number }; result: HelpMeResult };
+  'helpme:ask': { arg: { windowMinutes?: number; question?: string }; result: HelpMeResult };
   'screenshot:latest': { arg: void; result: Screenshot | undefined };
   'audio:levels': { arg: { tutor: number; student: number }; result: void };
   'transcriber:status': { arg: { ready: boolean; status: string }; result: void };
