@@ -32,6 +32,9 @@
 - Help-me streams: raw JSON text is accumulated and the `answer` field is extracted incrementally (`extractPartialAnswer`) and pushed as `helpme:partial`; the final result replaces it, partial resets on retry.
 - Memory is always recorded (context.md, concepts.json) and only optionally read; `ReportGenerator.generate` takes `includePriorInPrompt` so merging still uses real memory when the prompt omits it.
 
-## Next
-- Waiting for the user's `npm run capture-test` output from Windows; fix mic/loopback/Whisper issues it reveals.
-- Finishing: docs written (README, KNOWN_LIMITATIONS, FUTURE_IMPROVEMENTS); final verification pass and push.
+## Verified on the user's Windows PC (2026-11-05)
+- capture-test (mic, loopback, screenshot); full lesson with Whisper, speaker labels, Help-me using the screenshot, report file; latency fix (few seconds behind with tiny.en, no drops); system-wide F9; streamed answers.
+
+## Next (not started; see FUTURE_IMPROVEMENTS.md)
+- User to test the per-student memory checkbox and `npm run dist` installer on Windows.
+- Possible defaults change: ship `Xenova/whisper-tiny.en` as default if base lags on typical PCs.

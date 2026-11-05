@@ -137,7 +137,7 @@ See `ARCHITECTURE.md` (design), `docs/AUDIO.md` (audio capture notes) and `PROGR
 
 The code was built in a cloud environment with no microphone, speakers or display. Be aware of what has and has not been run on real hardware.
 
-| Component | Verified in cloud build (unit tests/mocks) | Verified on Windows (capture test, 2026-11-05) | Still needs testing on Windows |
+| Component | Verified in cloud build (unit tests/mocks) | Verified on the author's Windows 11 PC (2026-11-05) | Still needs testing on Windows |
 |---|---|---|---|
 | Storage (students, lessons, transcripts) | Yes | | |
 | Prompt building | Yes | | |
@@ -154,6 +154,11 @@ The code was built in a cloud environment with no microphone, speakers or displa
 | UI rendering and interaction | | Yes | |
 | `app://` scheme and Whisper model cache persistence | | Yes | |
 | Anthropic calls with a real API key | | Yes | |
+| Per-speaker Whisper workers, bounded queues, threaded WASM (lag a few seconds with tiny.en) | | Yes | |
+| System-wide F9 shortcut while another app has focus | | Yes | |
+| Streamed Help-me answer with thinking off (first text in 1-2 s) | | Yes | |
+| Per-student memory toggle and context.md blurb | Yes (unit tests) | | Yes |
+| Installer build (`npm run dist`) | | | Yes |
 | Hosted (OpenAI) transcription | | | Yes |
 | Whisper model cache across restarts (second launch should not re-download) | | | Yes |
 
