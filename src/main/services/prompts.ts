@@ -10,7 +10,7 @@ Respond ONLY with a JSON object (no prose, no code fences):
 {"answer": string, "confidence": string, "overview": string, "connections": [{"concept": string, "relation": string, "source": "this-lesson" | "past-lesson" | "new"}], "updatedRunningSummary": string}
 Rules:
 - ALWAYS give your best direct answer to the most recent question or problem being discussed. If none is explicit, answer what the student most likely needs. Never refuse or defer for lack of certainty; put any uncertainty in "confidence" as a one-line note.
-- Keep "answer" under ~150 words; give worked steps when it is a math or coding problem.
+- Keep "answer" under ~100 words; give worked steps when it is a math or coding problem.
 - "overview": 1-3 sentences on what is being discussed.
 - "connections": relate the discussion to concepts in the provided concept list (source "this-lesson" or "past-lesson"), or "new" for concepts not in the list. May be empty.
 - "updatedRunningSummary": 1-3 sentences summarising the lesson so far.`;
@@ -148,4 +148,26 @@ export function parseReport(text: string, lessonId: string): LessonReport {
     concepts,
     lessonSummary: str(j.lessonSummary),
   };
+}
+
+/** Extracts the (possibly incomplete) value of the "answer" string field from streamed JSON text. */
+export function extractPartialAnswer(raw: string): string {
+  const m = /"answer"\s*:\s*"/.exec(raw);
+  if (!m) return '';
+  let out = '';
+  for (let i = m.index + m[0].length; i < raw.length; i++) {
+    const c = raw[i];
+    if (c === '"') break;
+    if (c !== '\\') { out += c; continue; }
+    const n = raw[i + 1];
+    if (n === undefined) break;
+    if (n === 'u') {
+      const hex = raw.slice(i + 2, i + 6);
+      if (!/^[0-9a-fA-F]{4}$/.test(hex)) break;
+      out += String.fromCharCode(parseInt(hex, 16)); i += 5; continue;
+    }
+    out += n === 'n' ? '\n' : n === 't' ? '\t' : n === 'r' ? '\r' : n;
+    i++;
+  }
+  return out;
 }

@@ -75,7 +75,7 @@ export class LessonSession {
     await this.deps.storage.appendTranscript(this.student.id, this.lesson.id, segments);
   }
 
-  async helpMe(windowMinutes?: number): Promise<HelpMeResult> {
+  async helpMe(windowMinutes?: number, onDelta?: (partialAnswer: string) => void): Promise<HelpMeResult> {
     if (!this.lesson || !this.student) {
       return { ok: false, error: 'No lesson in progress', fallbackTranscript: [] };
     }
@@ -93,7 +93,7 @@ export class LessonSession {
         concepts: memory.concepts,
         priorLessonSummaries: memory.lessonSummaries.slice(-3).reverse(),
       },
-    });
+    }, onDelta);
     if (result.ok && result.response.updatedRunningSummary?.trim()) {
       this.lesson = { ...this.lesson, runningSummary: result.response.updatedRunningSummary };
       await this.deps.storage.saveLesson(this.lesson);

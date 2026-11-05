@@ -28,7 +28,16 @@ export class AnthropicLlmClient implements LlmClient {
       messages: [{ role: 'user', content }],
     };
     if (req.effort) params.output_config = { effort: req.effort };
-    const res: any = await this.client.messages.create(params, { timeout: req.timeoutMs, maxRetries: 0 });
+    if (req.thinking === 'off') params.thinking = { type: 'between_tools' };
+    let res: any;
+    if (req.onText) {
+      const onText = req.onText;
+      const stream = this.client.messages.stream(params, { timeout: req.timeoutMs, maxRetries: 0 });
+      stream.on('text', (delta: string) => onText(delta));
+      res = await stream.finalMessage();
+    } else {
+      res = await this.client.messages.create(params, { timeout: req.timeoutMs, maxRetries: 0 });
+    }
     if (res.stop_reason === 'refusal') throw new Error('Model refused: the request was declined by the model');
     const text = (res.content as Array<{ type: string; text?: string }>)
       .filter((b) => b.type === 'text')
@@ -68,7 +77,12 @@ export class MockLlmClient implements LlmClient {
 
   async complete(req: LlmRequest): Promise<LlmResponse> {
     this.calls.push(req);
-    return { text: this.respond(req), inputTokens: 0, outputTokens: 0 };
+    const text = this.respond(req);
+    if (req.onText) {
+      const a = Math.floor(text.length / 3), b = Math.floor((2 * text.length) / 3);
+      for (const piece of [text.slice(0, a), text.slice(a, b), text.slice(b)]) if (piece) req.onText(piece);
+    }
+    return { text, inputTokens: 0, outputTokens: 0 };
   }
 }
 

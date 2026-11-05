@@ -82,3 +82,16 @@ describe('report prompt/parse', () => {
     expect(r.learned).toEqual([]);
   });
 });
+
+import { extractPartialAnswer } from '../src/main/services/prompts';
+describe('extractPartialAnswer', () => {
+  it('handles partial and complete strings', () => {
+    expect(extractPartialAnswer('')).toBe('');
+    expect(extractPartialAnswer('{"ans')).toBe('');
+    expect(extractPartialAnswer('{"answer": ')).toBe('');
+    expect(extractPartialAnswer('{"answer": "x = ')).toBe('x = ');
+    expect(extractPartialAnswer('{"answer":"a\\nb \\"q\\" c","confidence":"hi"')).toBe('a\nb "q" c');
+    expect(extractPartialAnswer('{"answer":"abc\\')).toBe('abc');
+    expect(extractPartialAnswer('{"answer":"\\u00e9\\u00')).toBe('\u00e9');
+  });
+});

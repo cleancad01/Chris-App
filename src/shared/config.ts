@@ -9,7 +9,7 @@ export const MODELS = {
 export const LLM = {
   helpMeTimeoutMs: 45_000,
   helpMeRetries: 1,
-  helpMeMaxTokens: 1500,
+  helpMeMaxTokens: 900,
   helpMeEffort: 'low' as const,
   reportTimeoutMs: 120_000,
   reportRetries: 1,
@@ -32,7 +32,7 @@ export const SCREEN = {
   diffSize: 32,
   /** Fraction of thumbnail pixels that must change to count as "meaningfully changed". */
   changeThreshold: 0.02,
-  maxWidth: 1280,
+  maxWidth: 1024,
   jpegQuality: 70,
 } as const;
 

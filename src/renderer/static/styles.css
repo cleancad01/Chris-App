@@ -21,21 +21,22 @@ header{padding:8px;border-bottom:1px solid var(--line);display:flex;flex-directi
 .settings label{display:flex;gap:8px;align-items:center;justify-content:space-between}
 .warn{background:#5a2a14;color:#ffd9c2;padding:6px 10px;font-size:12px}
 #errors .err{background:#3a1c1c;color:var(--err);padding:5px 10px;font-size:12px}
-.transcript{flex:1;min-height:80px;overflow-y:auto;padding:8px;font-size:13px}
+.transcript{flex:1 1 0;min-height:80px;overflow-y:auto;padding:8px;font-size:13px}
 .empty{color:var(--dim);text-align:center;margin-top:20px}
 .seg{margin-bottom:5px}.seg .t{color:var(--dim);font-size:11px;margin-right:4px}
 .seg .who{font-weight:600;margin-right:4px}.who.tutor{color:var(--tutor)}.who.student{color:var(--student)}
-.help{max-height:42%;overflow-y:auto;border-top:1px solid var(--line);padding:8px;background:var(--panel)}
+.help{flex:0 1 auto;max-height:50%;overflow-y:auto;overflow-wrap:anywhere;border-top:1px solid var(--line);padding:8px;background:var(--panel)}
 .help:empty{display:none}
 .help h4{margin:8px 0 2px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim)}
-.help .answer{font-size:16px;font-weight:500;margin:0}
+.help .answer{font-size:14px;line-height:1.4;font-weight:500;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.help .answer.partial::after{content:' \2026';color:var(--dim)}
 .help .conf{font-size:11px;color:var(--dim)}
 .help .error{color:var(--err);margin:0 0 6px}
 .help .conn{margin:3px 0}
 .badge{font-size:10px;padding:1px 6px;border-radius:99px;margin-left:4px;background:var(--line);color:var(--dim)}
 .badge.past-lesson{color:var(--student)}.badge.new{color:var(--acc)}.badge.this-lesson{color:var(--tutor)}
-.help.loading{opacity:.6}
-.helpbtn{margin:8px;height:64px;font-size:22px;font-weight:700;background:var(--acc);border-color:var(--acc);color:#fff}
+.help.loading{opacity:.85}
+.helpbtn{flex:none;margin:8px;height:64px;font-size:22px;font-weight:700;background:var(--acc);border-color:var(--acc);color:#fff}
 .helpbtn small{font-weight:400;font-size:12px;opacity:.8}
 .spin{display:inline-block;width:16px;height:16px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite;vertical-align:middle;margin-right:8px}
 @keyframes sp{to{transform:rotate(360deg)}}

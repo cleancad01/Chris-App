@@ -11,6 +11,8 @@ export class HelpPanel {
 
   constructor(private ask: () => Promise<HelpMeResult>) {
     this.btn.addEventListener('click', () => void this.run());
+    window.api.on('helpme:trigger', () => { void this.run(); });
+    window.api.on('helpme:partial', (t) => this.showPartial(t));
     window.addEventListener('keydown', (e) => {
       if (e.key === 'F9' || (e.ctrlKey && e.key === 'Enter')) { e.preventDefault(); void this.run(); }
     });
@@ -28,10 +30,16 @@ export class HelpPanel {
 
   async run(): Promise<void> {
     if (this.busy || !this.enabled) return;
-    this.busy = true; this.sync();
+    this.busy = true; this.sync(); this.panel.replaceChildren();
     try { this.last = await this.ask(); }
     catch (e) { this.last = { ok: false, error: e instanceof Error ? e.message : String(e), fallbackTranscript: [] }; }
     this.busy = false; this.sync(); this.render();
+  }
+
+  private showPartial(text: string): void {
+    if (!this.busy) return;
+    if (!text) { this.panel.replaceChildren(); return; }
+    this.panel.replaceChildren(h('h4', undefined, 'Answer'), h('p', 'answer partial', text));
   }
 
   private render(): void {

@@ -46,7 +46,8 @@ Workflow:
 1. Pick an existing student or create one.
 2. Optionally enter a subject.
 3. Click **Start lesson**. Confirm the consent dialog. The app shows **Listening**.
-4. Click **Help me** (or press **F9** / **Ctrl+Enter**) when you want suggestions.
+4. Click **Help me** (or press **F9** / **Ctrl+Enter**; F9 works system-wide, even while Zoom has focus) when you want suggestions.
+   The window opens at 520x860 by default (resizable; presets in the gear menu).
 5. Click **End lesson**. A toast shows the report path with an **Open** button.
 
 Make sure Zoom plays through the **default** Windows output device, otherwise the Student stream is silent.

@@ -41,6 +41,10 @@ export interface IpcInvoke {
 export interface IpcEvents {
   'state:changed': AppState;
   'screenshot:updated': { capturedAt: number; width: number; height: number };
+  /** Global F9 shortcut pressed (works while another app has focus). */
+  'helpme:trigger': void;
+  /** Partial Help-me answer text while streaming. */
+  'helpme:partial': string;
 }
 
 export type IpcInvokeChannel = keyof IpcInvoke;

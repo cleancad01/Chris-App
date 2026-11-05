@@ -1,4 +1,4 @@
-import { app, BrowserWindow, desktopCapturer, ipcMain, protocol, session, shell } from 'electron';
+import { app, BrowserWindow, desktopCapturer, globalShortcut, ipcMain, protocol, session, shell } from 'electron';
 import * as path from 'node:path';
 import { promises as fs } from 'node:fs';
 import type { IpcInvoke, IpcInvokeChannel } from '../shared/ipc';
@@ -84,7 +84,7 @@ async function main(): Promise<void> {
   });
 
   win = new BrowserWindow({
-    width: 440, height: 760, title: 'Tutor Copilot',
+    width: 520, height: 860, minWidth: 380, minHeight: 600, title: 'Tutor Copilot',
     alwaysOnTop: settings.alwaysOnTop, opacity: settings.opacity,
     backgroundColor: '#14161a',
     webPreferences: {
@@ -122,7 +122,7 @@ async function main(): Promise<void> {
   handle('lesson:end', async () => { try { return await lesson.end(); } finally { screen.stop(); } });
   handle('transcript:append', (segs) => lesson.appendTranscript(segs));
   handle('transcript:get', () => lesson.getTranscript());
-  handle('helpme:ask', ({ windowMinutes }) => lesson.helpMe(windowMinutes));
+  handle('helpme:ask', ({ windowMinutes }) => lesson.helpMe(windowMinutes, (partial) => win?.webContents.send('helpme:partial', partial)));
   handle('screenshot:latest', () => screen.latest());
   handle('audio:levels', (l) => { lesson.setLevels(l); });
   handle('transcriber:status', ({ ready, status }) => { lesson.setTranscriberStatus(ready, status); });
@@ -130,6 +130,12 @@ async function main(): Promise<void> {
   handle('window:setAlwaysOnTop', (v) => { win?.setAlwaysOnTop(v); });
   handle('window:setSize', ({ width, height }) => { win?.setSize(Math.round(width), Math.round(height), true); });
   handle('shell:openPath', async (p) => { await shell.openPath(p); });
+
+  // System-wide F9 so Help-me works while Zoom has focus. The window is not raised or focused.
+  if (!globalShortcut.register('F9', () => win?.webContents.send('helpme:trigger', undefined))) {
+    console.warn('Could not register global F9 shortcut (already in use by another app).');
+  }
+  app.on('will-quit', () => globalShortcut.unregisterAll());
 
   app.on('window-all-closed', () => app.quit());
 }

@@ -86,6 +86,10 @@ export interface LlmRequest {
   /** Abort the request after this many ms. */
   timeoutMs: number;
   effort?: 'low' | 'medium' | 'high';
+  /** 'off' disables extended thinking. */
+  thinking?: 'off';
+  /** Streams text deltas as they arrive. */
+  onText?: (delta: string) => void;
 }
 
 export interface LlmResponse {
@@ -145,7 +149,7 @@ export interface Storage {
 
 export interface HelpMeService {
   /** Always resolves (never rejects). Applies timeout + one retry internally. */
-  ask(req: HelpMeRequest): Promise<import('./types').HelpMeResult>;
+  ask(req: HelpMeRequest, onDelta?: (partialAnswer: string) => void): Promise<import('./types').HelpMeResult>;
 }
 
 export interface ReportGenerator {
