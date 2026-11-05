@@ -3,6 +3,8 @@
 ## Done
 - [x] M0: Project scaffold (Electron 45, esbuild, Vitest, TS), shared types/interfaces/IPC/config, ARCHITECTURE.md.
 
+- [x] M1 (Tier 1 code complete, untested on real hardware): dual audio capture (mic + Electron loopback), Whisper worker (transformers.js) + hosted (OpenAI) + mock transcribers, storage, Anthropic LLM client, Help-me service (timeout + retry, never blank), report generator, Electron shell + UI with consent dialog, `npm run capture-test`. 49 unit tests pass. Verified here: build, typecheck, tests with mocks. NOT verified here: mic/loopback capture, Whisper in Electron worker, UI rendering.
+
 ## Decisions
 - Electron 45.2.3; system audio via `setDisplayMediaRequestHandler` + `audio: 'loopback'` (Windows).
 - Local STT: `@huggingface/transformers` Whisper (`Xenova/whisper-base.en`) in a Web Worker (WASM). Hosted option: OpenAI Whisper API via `OPENAI_API_KEY`.
@@ -13,4 +15,6 @@
 - Branch: work is pushed to `main` (user request) and mirrored to `claude/elegant-babbage-fvxtr3`.
 
 ## Next
-- Batch 1: audio capture + transcriber + capture-test (Opus); storage/LLM/help-me/report/tests (Sonnet); main/preload/UI (Sonnet).
+- Wait for the user's `npm run capture-test` output; fix loopback/mic issues if any.
+- Batch 2 (Tier 2): real screenshot capture (desktopCapturer, change detection, keep last 3), serve renderer over a custom `app://` scheme so the Cache API persists the Whisper model, memory roadmap polish.
+- Finishing: README, KNOWN_LIMITATIONS, FUTURE_IMPROVEMENTS.

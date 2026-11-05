@@ -40,9 +40,11 @@ async function main(): Promise<void> {
   });
 
   session.defaultSession.setDisplayMediaRequestHandler((_request, callback) => {
-    desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
-      callback({ video: sources[0], audio: 'loopback' });
-    });
+    desktopCapturer
+      .getSources({ types: ['screen'] })
+      .then((sources) => callback({ video: sources[0], audio: 'loopback' }))
+      // Never leave getDisplayMedia hanging: an empty grant makes it reject with a clear error.
+      .catch(() => callback({}));
   }, { useSystemPicker: false });
   session.defaultSession.setPermissionRequestHandler((_wc, permission, cb) => {
     cb(permission === 'media' || permission === 'display-capture');
