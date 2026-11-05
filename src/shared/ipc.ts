@@ -50,7 +50,13 @@ export interface RendererApi {
   invoke<C extends IpcInvokeChannel>(channel: C, arg: IpcInvoke[C]['arg']): Promise<IpcInvoke[C]['result']>;
   on<C extends IpcEventChannel>(channel: C, listener: (payload: IpcEvents[C]) => void): () => void;
   /** Environment flags the renderer needs at startup. */
-  env: { mockAudio: boolean; transcriber: 'local' | 'hosted' | 'mock'; hostedKeyPresent: boolean };
+  env: {
+    mockAudio: boolean;
+    transcriber: 'local' | 'hosted' | 'mock';
+    whisperModel: string;
+    /** OpenAI key for the hosted transcriber (local desktop app; renderer loads only local files). */
+    hostedApiKey?: string;
+  };
 }
 
 declare global {
