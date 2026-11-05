@@ -37,6 +37,13 @@
 <section id="help" class="help"></section>
 <button id="helpBtn" class="helpbtn" disabled>Help me <small>(F9)</small></button>
 <div id="toast" class="toast" hidden></div>
+<div id="newStudentModal" class="modal" hidden>
+  <div class="dialog">
+    <h3>New student</h3>
+    <input id="newStudentName" type="text" placeholder="Student name" autocomplete="off" style="width:100%;margin:8px 0 12px">
+    <div class="row end"><button id="newStudentCancel">Cancel</button><button id="newStudentOk" class="primary">Create</button></div>
+  </div>
+</div>
 <div id="consent" class="modal" hidden>
   <div class="dialog">
     <p>Make sure your student knows this lesson is being recorded and transcribed.</p>

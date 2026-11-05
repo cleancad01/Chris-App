@@ -62,12 +62,25 @@ async function loadStudents(select?: string): Promise<void> {
   if (select) studentSel.value = select;
 }
 
-$('newStudent').addEventListener('click', async () => {
-  const name = window.prompt('Student name?')?.trim();
-  if (!name) return;
-  const s = await api.invoke('students:create', { name });
-  await loadStudents(s.id);
+// Electron does not support window.prompt(), so use an inline dialog.
+const nameInput = $('newStudentName') as HTMLInputElement;
+$('newStudent').addEventListener('click', () => {
+  nameInput.value = '';
+  $('newStudentModal').hidden = false;
+  nameInput.focus();
 });
+$('newStudentCancel').addEventListener('click', () => { $('newStudentModal').hidden = true; });
+async function createStudent(): Promise<void> {
+  const name = nameInput.value.trim();
+  if (!name) return;
+  $('newStudentModal').hidden = true;
+  try {
+    const s = await api.invoke('students:create', { name });
+    await loadStudents(s.id);
+  } catch (e) { showError(`Could not create student: ${(e as Error).message}`); }
+}
+$('newStudentOk').addEventListener('click', () => void createStudent());
+nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') void createStudent(); });
 
 function setStatus(ready: boolean, status: string): void {
   pillOverride = undefined;
