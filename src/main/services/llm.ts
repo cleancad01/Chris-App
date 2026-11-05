@@ -1,0 +1,75 @@
+import Anthropic from '@anthropic-ai/sdk';
+import type { LlmClient, LlmContentBlock, LlmRequest, LlmResponse } from '../../shared/interfaces';
+
+export class AnthropicLlmClient implements LlmClient {
+  private client?: Anthropic;
+
+  private key(): string | undefined {
+    return process.env.ANTHROPIC_API_KEY?.trim() || undefined;
+  }
+
+  isConfigured(): boolean {
+    return !!this.key();
+  }
+
+  async complete(req: LlmRequest): Promise<LlmResponse> {
+    const apiKey = this.key();
+    if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set');
+    this.client ??= new Anthropic({ apiKey });
+    const content = req.content.map((b) =>
+      b.type === 'text'
+        ? { type: 'text' as const, text: b.text }
+        : { type: 'image' as const, source: { type: 'base64' as const, media_type: b.mimeType, data: b.dataBase64 } },
+    );
+    const params: any = {
+      model: req.model,
+      max_tokens: req.maxTokens,
+      system: req.system,
+      messages: [{ role: 'user', content }],
+    };
+    if (req.effort) params.output_config = { effort: req.effort };
+    const res: any = await this.client.messages.create(params, { timeout: req.timeoutMs, maxRetries: 0 });
+    if (res.stop_reason === 'refusal') throw new Error('Model refused: the request was declined by the model');
+    const text = (res.content as Array<{ type: string; text?: string }>)
+      .filter((b) => b.type === 'text')
+      .map((b) => b.text ?? '')
+      .join('');
+    return { text, inputTokens: res.usage?.input_tokens, outputTokens: res.usage?.output_tokens };
+  }
+}
+
+export function mockHelpMeJson(answer = 'Mock answer.'): string {
+  return JSON.stringify({
+    answer, confidence: 'High - mock', overview: 'Mock overview.',
+    connections: [{ concept: 'Fractions', relation: 'Related.', source: 'past-lesson' }],
+    updatedRunningSummary: 'Mock running summary.',
+  });
+}
+
+export function mockReportJson(): string {
+  return JSON.stringify({
+    overview: 'The student practised solving linear equations.',
+    learned: ['Isolating a variable'], yetToLearn: ['Quadratics'], struggles: ['Negative coefficients'],
+    nextSteps: ['Review negative numbers'],
+    concepts: [{ name: 'Linear equations', description: 'Solving ax+b=c', status: 'practiced' }],
+    lessonSummary: 'Worked on linear equations.',
+  });
+}
+
+export class MockLlmClient implements LlmClient {
+  calls: LlmRequest[] = [];
+  configured = true;
+  respond: (req: LlmRequest) => string = (req) =>
+    req.system.includes('end-of-lesson') ? mockReportJson() : mockHelpMeJson();
+
+  isConfigured(): boolean {
+    return this.configured;
+  }
+
+  async complete(req: LlmRequest): Promise<LlmResponse> {
+    this.calls.push(req);
+    return { text: this.respond(req), inputTokens: 0, outputTokens: 0 };
+  }
+}
+
+export type { LlmContentBlock };

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https: data: blob:; media-src 'self' blob: mediastream:">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tutor Copilot</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="warn" class="warn" hidden>ANTHROPIC_API_KEY not set - Help-me and reports will fail. Add it to .env.</div>
+<header>
+  <div class="row">
+    <select id="student" title="Student"></select>
+    <button id="newStudent" class="small" title="New student">+</button>
+    <input id="subject" placeholder="Subject" />
+    <button id="gear" class="small" title="Settings">&#9881;</button>
+  </div>
+  <div class="row">
+    <button id="startEnd" class="primary">Start lesson</button>
+    <span id="pill" class="pill">Idle</span>
+  </div>
+  <div class="row meters">
+    <label>Tutor <span class="meter"><i id="mTutor"></i></span></label>
+    <label>Student <span class="meter"><i id="mStudent"></i></span></label>
+  </div>
+  <div id="settings" class="settings" hidden>
+    <label><input type="checkbox" id="sTop"> Always on top</label>
+    <label>Opacity <input type="range" id="sOpacity" min="0.4" max="1" step="0.05"></label>
+    <label>Transcript window (min) <input type="number" id="sWindow" min="1" max="60" style="width:56px"></label>
+    <label><input type="checkbox" id="sShots"> Screenshots</label>
+  </div>
+</header>
+<div id="errors"></div>
+<main id="transcript" class="transcript"><div class="empty">Transcript will appear here.</div></main>
+<section id="help" class="help"></section>
+<button id="helpBtn" class="helpbtn" disabled>Help me <small>(F9)</small></button>
+<div id="toast" class="toast" hidden></div>
+<div id="consent" class="modal" hidden>
+  <div class="dialog">
+    <p>Make sure your student knows this lesson is being recorded and transcribed.</p>
+    <div class="row end"><button id="consentCancel">Cancel</button><button id="consentOk" class="primary">I have told them - start</button></div>
+  </div>
+</div>
+<script src="index.js"></script>
+</body>
+</html>
