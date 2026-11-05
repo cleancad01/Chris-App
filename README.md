@@ -122,23 +122,23 @@ See `ARCHITECTURE.md` (design), `docs/AUDIO.md` (audio capture notes) and `PROGR
 
 The code was built in a cloud environment with no microphone, speakers or display. Be aware of what has and has not been run on real hardware.
 
-| Component | Verified in cloud build (unit tests/mocks) | Needs testing on your Windows machine |
-|---|---|---|
-| Storage (students, lessons, transcripts) | Yes | |
-| Prompt building | Yes | |
-| Help-me timeout/retry/fallback logic | Yes | |
-| Report rendering | Yes | |
-| Transcript windowing | Yes | |
-| Concept memory merge | Yes | |
-| Screenshot change detection (diff) | Yes | |
-| Build and typecheck | Yes | |
-| Microphone capture | | Yes |
-| System-audio loopback capture | | Yes |
-| Whisper worker inside Electron | | Yes |
-| Screenshot capture (desktopCapturer) | | Yes |
-| UI rendering and interaction | | Yes |
-| `app://` scheme and Whisper model cache persistence | | Yes |
-| Anthropic calls with a real API key | | Yes |
-| Hosted (OpenAI) transcription | | Yes |
+| Component | Verified in cloud build (unit tests/mocks) | Verified on Windows (capture test, 2026-11-05) | Still needs testing on Windows |
+|---|---|---|---|
+| Storage (students, lessons, transcripts) | Yes | | |
+| Prompt building | Yes | | |
+| Help-me timeout/retry/fallback logic | Yes | | |
+| Report rendering | Yes | | |
+| Transcript windowing | Yes | | |
+| Concept memory merge | Yes | | |
+| Screenshot change detection (diff) | Yes | | |
+| Build and typecheck | Yes | | |
+| Microphone capture (capture-test) | | Yes | |
+| System-audio loopback capture (capture-test) | | Yes | |
+| Whisper worker inside Electron | | | Yes |
+| Screenshot capture (desktopCapturer, one-shot) | | Yes | Periodic capture + diff in the app |
+| UI rendering and interaction | | | Yes |
+| `app://` scheme and Whisper model cache persistence | | | Yes |
+| Anthropic calls with a real API key | | | Yes |
+| Hosted (OpenAI) transcription | | | Yes |
 
-Please run `npm run capture-test` first and report the output.
+`npm run capture-test` passed on the author's Windows 11 machine (Realtek mic, Electron 45.2.3): mic and loopback both recorded signal, screenshot saved. Next verification step: run `npm start` and complete one short lesson.

@@ -13,7 +13,11 @@ export class LoopbackAudioSource implements AudioSource {
   private capture = new StreamCapture();
 
   async start(onChunk: (chunk: AudioChunk) => void): Promise<void> {
-    const stream = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: true });
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      // Raw system audio: Chromium's voice processing would distort the student's voice coming through Zoom.
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+      video: true,
+    });
     stream.getVideoTracks().forEach((t) => { t.stop(); stream.removeTrack(t); });
     if (stream.getAudioTracks().length === 0) {
       stream.getTracks().forEach((t) => t.stop());

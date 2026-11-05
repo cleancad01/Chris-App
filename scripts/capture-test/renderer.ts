@@ -74,7 +74,7 @@ async function main() {
   }
   const results = await Promise.all([
     record('mic', () => navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false })),
-    record('system', () => navigator.mediaDevices.getDisplayMedia({ audio: true, video: true })),
+    record('system', () => navigator.mediaDevices.getDisplayMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, video: true })),
   ]);
   // Re-list after permission so labels are filled in.
   try {

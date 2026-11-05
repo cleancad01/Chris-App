@@ -6,6 +6,8 @@
 - [x] M1 (Tier 1 code complete, untested on real hardware): dual audio capture (mic + Electron loopback), Whisper worker (transformers.js) + hosted (OpenAI) + mock transcribers, storage, Anthropic LLM client, Help-me service (timeout + retry, never blank), report generator, Electron shell + UI with consent dialog, `npm run capture-test`. 49 unit tests pass. Verified here: build, typecheck, tests with mocks. NOT verified here: mic/loopback capture, Whisper in Electron worker, UI rendering.
 - [x] Tier 2: real screenshot capture (desktopCapturer + change detection, header indicator) and renderer served over `app://` (Cache API for Whisper model). Untested on Windows.
 
+- [x] Capture test passed on the user's Windows machine (mic + loopback + screenshot). Loopback now requests raw audio (no echo cancellation / noise suppression / AGC).
+
 ## Decisions
 - Renderer is served via custom `app://tutor/` scheme (privileged, secure) with an explicit extension->MIME map and path-traversal guard, because file:// origins are opaque and cannot use the Cache API.
 - Screenshot change detection: resize thumbnail to 32x32, compare BGRA luma per pixel (delta > 24); capture only when >= 2% pixels changed (`changedFraction` in `src/main/screenDiff.ts`). Keep newest 3 in memory.
