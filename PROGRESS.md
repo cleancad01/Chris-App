@@ -8,6 +8,8 @@
 
 - [x] Capture test passed on the user's Windows machine (mic + loopback + screenshot). Loopback now requests raw audio (no echo cancellation / noise suppression / AGC).
 
+- [x] Full end-to-end lesson verified on the user's Windows machine: Whisper worker, speaker labels, Help-me (screenshot was used), report saved. Fixed: window.prompt unsupported in Electron; trailing chunks after End lesson raised errors.
+
 ## Decisions
 - Renderer is served via custom `app://tutor/` scheme (privileged, secure) with an explicit extension->MIME map and path-traversal guard, because file:// origins are opaque and cannot use the Cache API.
 - Screenshot change detection: resize thumbnail to 32x32, compare BGRA luma per pixel (delta > 24); capture only when >= 2% pixels changed (`changedFraction` in `src/main/screenDiff.ts`). Keep newest 3 in memory.

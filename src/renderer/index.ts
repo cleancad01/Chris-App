@@ -105,12 +105,16 @@ async function beginLesson(): Promise<void> {
     });
     setStatus(true, 'Listening');
     const onChunk = async (chunk: AudioChunk): Promise<void> => {
+      // Trailing chunks can arrive after End lesson (sources flush while stopping): ignore them quietly.
+      if (transcriber !== tr) return;
       try {
         const segs: TranscriptSegment[] = await tr.transcribe(chunk);
-        if (!segs.length) return;
+        if (!segs.length || transcriber !== tr) return;
         view.add(segs);
         await api.invoke('transcript:append', segs);
-      } catch (e) { showError(`Transcription error: ${(e as Error).message}`); }
+      } catch (e) {
+        if (transcriber === tr) showError(`Transcription error: ${(e as Error).message}`);
+      }
     };
     sources = [];
     for (const [src, label] of [[tutor, 'Microphone'], [student, 'System audio']] as const) {
@@ -129,11 +133,13 @@ async function beginLesson(): Promise<void> {
 
 async function endLesson(): Promise<void> {
   busy = true; render();
+  $('errors').replaceChildren();
   if (levelTimer) clearInterval(levelTimer);
   await Promise.all(sources.map((s) => s.stop().catch(() => undefined)));
   sources = [];
-  try { await transcriber?.dispose(); } catch { /* ignore */ }
-  transcriber = undefined;
+  const tr = transcriber;
+  transcriber = undefined; // detach first so in-flight chunks are ignored, then dispose
+  try { await tr?.dispose(); } catch { /* ignore */ }
   try {
     pillOverride = 'Generating report...'; render();
     const r = await api.invoke('lesson:end', undefined);

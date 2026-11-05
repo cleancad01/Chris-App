@@ -134,11 +134,12 @@ The code was built in a cloud environment with no microphone, speakers or displa
 | Build and typecheck | Yes | | |
 | Microphone capture (capture-test) | | Yes | |
 | System-audio loopback capture (capture-test) | | Yes | |
-| Whisper worker inside Electron | | | Yes |
-| Screenshot capture (desktopCapturer, one-shot) | | Yes | Periodic capture + diff in the app |
-| UI rendering and interaction | | | Yes |
-| `app://` scheme and Whisper model cache persistence | | | Yes |
-| Anthropic calls with a real API key | | | Yes |
+| Whisper worker inside Electron | | Yes | |
+| Screenshot capture (desktopCapturer) | | Yes | |
+| UI rendering and interaction | | Yes | |
+| `app://` scheme and Whisper model cache persistence | | Yes | |
+| Anthropic calls with a real API key | | Yes | |
 | Hosted (OpenAI) transcription | | | Yes |
+| Whisper model cache across restarts (second launch should not re-download) | | | Yes |
 
-`npm run capture-test` passed on the author's Windows 11 machine (Realtek mic, Electron 45.2.3): mic and loopback both recorded signal, screenshot saved. Next verification step: run `npm start` and complete one short lesson.
+`npm run capture-test` passed on the author's Windows 11 machine (Realtek mic, Electron 45.2.3): mic and loopback both recorded signal, screenshot saved. A full lesson (`npm start`: Whisper transcription of both streams, Help-me with screenshot, report file) also ran successfully on that machine the same day.
