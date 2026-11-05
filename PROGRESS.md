@@ -18,6 +18,5 @@
 - Branch: work is pushed to `main` (user request) and mirrored to `claude/elegant-babbage-fvxtr3`.
 
 ## Next
-- Wait for the user's `npm run capture-test` output; fix loopback/mic issues if any.
-- Batch 2 (Tier 2): real screenshot capture (desktopCapturer, change detection, keep last 3), serve renderer over a custom `app://` scheme so the Cache API persists the Whisper model, memory roadmap polish.
-- Finishing: README, KNOWN_LIMITATIONS, FUTURE_IMPROVEMENTS.
+- Waiting for the user's `npm run capture-test` output from Windows; fix mic/loopback/Whisper issues it reveals.
+- Finishing: docs written (README, KNOWN_LIMITATIONS, FUTURE_IMPROVEMENTS); final verification pass and push.
