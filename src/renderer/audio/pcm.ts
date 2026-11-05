@@ -2,7 +2,7 @@
  * PCM helpers shared by the real audio sources (and the capture-test diagnostic).
  *
  * Pipeline: MediaStream -> AudioContext({sampleRate:16000}) (Chromium resamples for us)
- *   -> ScriptProcessorNode (1 channel, 'speakers' downmix) -> PcmChunker (5 s chunks, silence dropped).
+ *   -> ScriptProcessorNode (1 channel, 'speakers' downmix) -> PcmChunker (AUDIO.chunkSeconds chunks, silence dropped).
  * Everything except StreamCapture is pure and runs in node/vitest.
  */
 import type { AudioChunk, Speaker } from '../../shared/types';

@@ -41,36 +41,40 @@ export function createReportGenerator(llm: LlmClient, opts: ReportOptions = {}):
       const start = new Date(lesson.startedAt);
       const end = lesson.endedAt ? new Date(lesson.endedAt) : undefined;
       const mins = end ? Math.max(0, Math.round((end.getTime() - start.getTime()) / 60000)) : undefined;
-      const date = lesson.startedAt.slice(0, 10);
+      // Local date/time for humans (ISO strings in lesson.json stay UTC).
+      const pad = (n: number): string => String(n).padStart(2, '0');
+      const localDate = (d: Date): string => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      const localTime = (d: Date): string => `${localDate(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      const date = localDate(start);
       const rows = report.concepts.map((c) => `| ${cell(c.name)} | ${c.status} | ${cell(c.description)} |`).join('\n');
-      return `# Lesson report - ${student.name} - ${date}
+      return `## Lesson report - ${student.name} - ${date}
 
-- Started: ${lesson.startedAt}
-- Ended: ${lesson.endedAt ?? 'n/a'}
+- Started: ${localTime(start)}
+- Ended: ${end ? localTime(end) : 'n/a'}
 - Duration: ${mins !== undefined ? `${mins} min` : 'n/a'}
 - Subject: ${lesson.subject ?? 'n/a'}
 
-## Overview
+### Overview
 ${report.overview}
 
-## What the student learned
+### What the student learned
 ${bullets(report.learned)}
 
-## Not yet learned
+### Not yet learned
 ${bullets(report.yetToLearn)}
 
-## Where they struggled
+### Where they struggled
 ${bullets(report.struggles)}
 
-## Suggested next steps
+### Suggested next steps
 ${bullets(report.nextSteps)}
 
-## Concept roadmap
+### Concept roadmap
 | Concept | Status | Description |
 |---|---|---|
 ${rows}
 
-## Full transcript
+### Full transcript
 ${formatTranscript(transcript) || '(empty)'}
 `;
     },

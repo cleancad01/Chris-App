@@ -63,6 +63,7 @@ Set in `.env` or the shell.
 | `TUTOR_MOCK_LLM=1` | Fake model answers; no API cost. |
 | `TUTOR_TRANSCRIBER` | `local`, `hosted` or `mock`. Default: `mock` with mock audio, `hosted` if `OPENAI_API_KEY` is set, else `local`. |
 | `TUTOR_WHISPER_MODEL` | Local model. Default `Xenova/whisper-base.en`; `Xenova/whisper-tiny.en` is faster on slow PCs. |
+| `TUTOR_WASM_THREADS=0` | Disables multi-threaded Whisper WASM (drops the COOP/COEP headers on `app://`). Use it if the Whisper model fails to load. |
 | `TUTOR_DATA_DIR` | Data folder. Default `%APPDATA%\tutor-copilot\data`. |
 
 `.env` is read from the app folder and from `%APPDATA%\tutor-copilot\.env`; real environment variables take precedence.

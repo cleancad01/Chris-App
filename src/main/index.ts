@@ -41,15 +41,21 @@ async function main(): Promise<void> {
   await app.whenReady();
 
   const rendererDir = path.join(__dirname, '..', 'renderer');
+  // COOP/COEP make the renderer and its workers crossOriginIsolated, so onnxruntime-web can use
+  // SharedArrayBuffer threads for Whisper. 'credentialless' still lets the CDN/HF fetches through.
+  // Escape hatch: TUTOR_WASM_THREADS=0 drops the headers (single-threaded WASM, as before). Read per request
+  // because .env is loaded below, after this handler is registered.
+  const ISOLATION = { 'Cross-Origin-Opener-Policy': 'same-origin', 'Cross-Origin-Embedder-Policy': 'credentialless' };
   protocol.handle('app', async (req) => {
+    const isolationHeaders: Record<string, string> = process.env.TUTOR_WASM_THREADS === '0' ? {} : ISOLATION;
     let p = decodeURIComponent(new URL(req.url).pathname);
     if (p === '/' || p === '') p = '/index.html';
     const file = path.normalize(path.join(rendererDir, p));
-    if (!file.startsWith(rendererDir + path.sep)) return new Response('forbidden', { status: 403 });
+    if (!file.startsWith(rendererDir + path.sep)) return new Response('forbidden', { status: 403, headers: isolationHeaders });
     try {
       const body = await fs.readFile(file);
-      return new Response(body, { headers: { 'content-type': MIME[path.extname(file).toLowerCase()] ?? 'application/octet-stream' } });
-    } catch { return new Response('not found', { status: 404 }); }
+      return new Response(body, { headers: { ...isolationHeaders, 'content-type': MIME[path.extname(file).toLowerCase()] ?? 'application/octet-stream' } });
+    } catch { return new Response('not found', { status: 404, headers: isolationHeaders }); }
   });
 
   loadEnv([path.join(app.getAppPath(), '.env'), path.join(app.getPath('userData'), '.env'),

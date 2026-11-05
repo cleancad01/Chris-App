@@ -20,7 +20,7 @@ export const LLM = {
 export const AUDIO = {
   sampleRate: 16000 as const,
   /** Seconds of audio per transcription chunk. */
-  chunkSeconds: 5,
+  chunkSeconds: 4,
   /** RMS below this is treated as silence and skipped. */
   silenceRms: 0.005,
 } as const;

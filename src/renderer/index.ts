@@ -14,6 +14,7 @@ let state: AppState | undefined;
 let sources: AudioSource[] = [];
 let transcriber: Transcriber | undefined;
 let levelTimer: number | undefined;
+let statsTimer: number | undefined;
 let busy = false;
 let pillOverride: string | undefined;
 
@@ -126,6 +127,21 @@ async function beginLesson(): Promise<void> {
       const lv = { tutor: tutor.getLevel(), student: student.getLevel() };
       void api.invoke('audio:levels', lv);
     }, 500);
+    // Backlog indicator: only LocalWhisperTranscriber has getStats() (not part of the Transcriber interface).
+    if (typeof (tr as any).getStats === 'function') { // eslint-disable-line @typescript-eslint/no-explicit-any
+      const getStats = () => (tr as unknown as { getStats(): { pending: number; dropped: number; lastLatencyMs: number } }).getStats();
+      let lastDropped = 0;
+      statsTimer = window.setInterval(() => {
+        if (transcriber !== tr || state?.status !== 'running') return;
+        const st = getStats();
+        const prev = pillOverride;
+        if (st.dropped > lastDropped) pillOverride = `Listening (dropped ${st.dropped} chunk${st.dropped === 1 ? '' : 's'})`;
+        else if (st.pending >= 2) pillOverride = `Listening (behind ~${Math.max(1, Math.round(st.lastLatencyMs / 1000))}s)`;
+        else pillOverride = undefined; // falls back to state.transcriberStatus ("Listening")
+        lastDropped = st.dropped;
+        if (pillOverride !== prev) render();
+      }, 2000);
+    }
   } catch (e) {
     showError(`Could not start lesson: ${(e as Error).message}`);
   } finally { busy = false; render(); }
@@ -135,6 +151,8 @@ async function endLesson(): Promise<void> {
   busy = true; render();
   $('errors').replaceChildren();
   if (levelTimer) clearInterval(levelTimer);
+  if (statsTimer) clearInterval(statsTimer);
+  statsTimer = undefined;
   await Promise.all(sources.map((s) => s.stop().catch(() => undefined)));
   sources = [];
   const tr = transcriber;

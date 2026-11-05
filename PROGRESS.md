@@ -10,6 +10,7 @@
 
 - [x] Full end-to-end lesson verified on the user's Windows machine: Whisper worker, speaker labels, Help-me (screenshot was used), report saved. Fixed: window.prompt unsupported in Electron; trailing chunks after End lesson raised errors.
 - [x] Tier 3 polish: electron-builder NSIS installer (`npm run dist`), window-size presets (`window:setSize`), local model note in settings, `.env` also read next to the exe.
+- [x] Transcription latency: one Whisper worker per speaker, per-speaker queue cap 2 (drop oldest, pill shows backlog/drops), 4 s chunks, multi-threaded WASM via COOP/COEP on `app://`, no `chunk_length_s` for <30 s input.
 
 ## Decisions
 - Renderer is served via custom `app://tutor/` scheme (privileged, secure) with an explicit extension->MIME map and path-traversal guard, because file:// origins are opaque and cannot use the Cache API.
@@ -23,6 +24,7 @@
 - Branch: work is pushed to `main` (user request) and mirrored to `claude/elegant-babbage-fvxtr3`.
 
 - userData is pinned to `%APPDATA%\tutor-copilot` via `app.setPath` so dev and packaged builds share `.env` and data.
+- Live transcription prefers freshness over completeness: when a speaker's queue (cap 2) is full the oldest chunk is dropped; `TUTOR_WASM_THREADS=0` disables the COOP/COEP headers if threaded WASM breaks model loading.
 
 ## Next
 - Waiting for the user's `npm run capture-test` output from Windows; fix mic/loopback/Whisper issues it reveals.

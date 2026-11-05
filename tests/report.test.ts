@@ -31,8 +31,8 @@ describe('ReportGenerator', () => {
     const gen = createReportGenerator(new MockLlmClient());
     const report = await gen.generate({ lesson, student, transcript, priorMemory });
     const md = gen.renderMarkdown({ lesson, student, report, transcript });
-    expect(md).toContain('# Lesson report - Alex - 2026-11-05');
-    for (const h of ['## Overview', '## What the student learned', '## Not yet learned', '## Where they struggled', '## Suggested next steps', '## Concept roadmap', '## Full transcript']) expect(md).toContain(h);
+    expect(md).toContain('## Lesson report - Alex - ');
+    for (const h of ['### Overview', '### What the student learned', '### Not yet learned', '### Where they struggled', '### Suggested next steps', '### Concept roadmap', '### Full transcript']) expect(md).toContain(h);
     expect(md).toContain('45 min');
     expect(md).toContain('| Linear equations | practiced |');
     expect(md).toContain('Tutor: Hello there');

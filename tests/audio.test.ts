@@ -5,6 +5,7 @@ import { createAudioSources } from '../src/renderer/audio';
 import { MockTranscriber } from '../src/renderer/transcriber/mock';
 import { cleanTranscriptText, createTranscriber } from '../src/renderer/transcriber';
 import type { AudioChunk } from '../src/shared/types';
+import { AUDIO } from '../src/shared/config';
 
 const SR = 16000;
 const tone = (seconds: number, amp = 0.1) =>
@@ -16,7 +17,7 @@ const chunk = (speaker: 'tutor' | 'student', startMs = 0): AudioChunk => ({
 afterEach(() => vi.useRealTimers());
 
 describe('FakeAudioSource', () => {
-  it('emits 5 s 16 kHz chunks for its speaker and skips silent ones', async () => {
+  it('emits AUDIO.chunkSeconds 16 kHz chunks for its speaker and skips silent ones', async () => {
     vi.useFakeTimers();
     const src = new FakeAudioSource('student', { intervalMs: 100, silentEvery: 4 });
     const got: AudioChunk[] = [];
@@ -28,8 +29,8 @@ describe('FakeAudioSource', () => {
       expect(c.speaker).toBe('student');
       expect(c.sampleRate).toBe(16000);
       expect(c.samples).toBeInstanceOf(Float32Array);
-      expect(c.samples.length).toBe(5 * SR);
-      expect(c.endMs - c.startMs).toBe(5000);
+      expect(c.samples.length).toBe(AUDIO.chunkSeconds * SR);
+      expect(c.endMs - c.startMs).toBe(AUDIO.chunkSeconds * 1000);
       expect(rms(c.samples)).toBeGreaterThan(0.05);
     }
     expect(src.getLevel()).toBe(0);
@@ -69,7 +70,7 @@ describe('chunker', () => {
     buf.set(tone(5), 0); // chunk 0 loud
     // chunk 1 (5-10 s) silent
     buf.set(tone(5), 10 * SR); // chunk 2 loud
-    const { chunks, rest, restStartMs } = splitIntoChunks(buf, 1_000_000, 'tutor');
+    const { chunks, rest, restStartMs } = splitIntoChunks(buf, 1_000_000, 'tutor', { chunkSeconds: 5 });
     expect(chunks.map((c) => c.startMs)).toEqual([1_000_000, 1_010_000]);
     expect(chunks.map((c) => c.endMs)).toEqual([1_005_000, 1_015_000]);
     expect(chunks.every((c) => c.samples.length === 5 * SR && c.speaker === 'tutor')).toBe(true);
@@ -79,7 +80,7 @@ describe('chunker', () => {
 
   it('PcmChunker accumulates small buffers into chunks', () => {
     const out: AudioChunk[] = [];
-    const ch = new PcmChunker('student', (c) => out.push(c));
+    const ch = new PcmChunker('student', (c) => out.push(c), { chunkSeconds: 5 });
     const block = tone(1).subarray(0, 4096);
     let t = 0;
     for (let i = 0; i < 40; i++) ch.push(block, (t += (4096 / SR) * 1000)); // ~10.2 s

@@ -24,6 +24,15 @@ export type WorkerOut =
 env.allowLocalModels = false;
 env.useBrowserCache = true;
 
+// Multi-threaded WASM needs SharedArrayBuffer, i.e. crossOriginIsolated (COOP/COEP headers on app://, see
+// src/main/index.ts; disabled with TUTOR_WASM_THREADS=0). Two workers run at once (one per speaker), so each
+// takes about half the cores, capped at 4.
+const isolated = (self as unknown as { crossOriginIsolated?: boolean }).crossOriginIsolated === true;
+const cores = (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 2;
+const wasmEnv = env.backends?.onnx?.wasm;
+if (isolated && wasmEnv) wasmEnv.numThreads = Math.max(1, Math.min(4, Math.floor(cores / 2)));
+console.log(`[whisper.worker] crossOriginIsolated=${isolated} hardwareConcurrency=${cores} wasm.numThreads=${wasmEnv?.numThreads ?? 'default'}`);
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Asr = (audio: Float32Array, opts?: Record<string, unknown>) => Promise<any>;
 let asr: Asr | undefined;
@@ -68,7 +77,9 @@ self.onmessage = async (e: MessageEvent<WorkerIn>) => {
       if (!asr) throw new Error('Whisper not initialised');
       if (msg.sampleRate !== 16000) throw new Error(`Expected 16 kHz audio, got ${msg.sampleRate}`);
       const out = await asr(msg.samples, {
-        chunk_length_s: 30, // one window covers a 5 s chunk (padded)
+        // Whisper's window is 30 s; shorter input is padded into one window, so only long input needs
+        // chunking (chunk_length_s adds strided overlap passes).
+        ...(msg.samples.length > 30 * msg.sampleRate ? { chunk_length_s: 30 } : {}),
         ...(multilingual ? { language: 'en', task: 'transcribe' } : {}),
       });
       const text = Array.isArray(out) ? out.map((o) => o.text).join(' ') : out?.text ?? '';
