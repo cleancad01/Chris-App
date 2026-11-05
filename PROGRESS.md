@@ -1,6 +1,7 @@
 # PROGRESS
 
 ## Done
+- Lesson history panel and finishing interrupted lessons (2026-11-05); unit-tested, untested on Windows.
 - Help-me specific question box, Pause/Resume recording, default Whisper model tiny.en with settings select.
 - [x] M0: Project scaffold (Electron 45, esbuild, Vitest, TS), shared types/interfaces/IPC/config, ARCHITECTURE.md.
 
@@ -36,6 +37,6 @@
 ## Verified on the user's Windows PC (2026-11-05)
 - capture-test (mic, loopback, screenshot); full lesson with Whisper, speaker labels, Help-me using the screenshot, report file; latency fix (few seconds behind with tiny.en, no drops); system-wide F9; streamed answers.
 
-## Next (not started; see FUTURE_IMPROVEMENTS.md)
-- User to test the per-student memory checkbox and `npm run dist` installer on Windows.
-- Possible defaults change: ship `Xenova/whisper-tiny.en` as default if base lags on typical PCs.
+## Next (session closed 2026-11-05; see FUTURE_IMPROVEMENTS.md)
+- User to test on Windows: lesson History panel, "Finish lesson" for interrupted lessons, question box, Pause, model dropdown, `npm run dist` installer.
+- Remaining ideas: answer history within a lesson, WebGPU Whisper, screenshot-on-demand mode, VAD, PDF export.

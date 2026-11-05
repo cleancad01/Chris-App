@@ -55,6 +55,8 @@ function render(): void {
   pill.textContent = (running && paused) ? 'Paused' : pillOverride ?? (state.status === 'idle' ? 'Idle' : state.transcriberStatus);
   pill.classList.toggle('live', running && state.transcriberReady);
   help.setEnabled(running);
+  historyBtn.hidden = state.status !== 'idle';
+  if (state.status !== 'idle') historyPanel.hidden = true;
   $('mTutor').style.width = `${Math.min(100, state.audioLevels.tutor * 300)}%`;
   $('mStudent').style.width = `${Math.min(100, state.audioLevels.student * 300)}%`;
 }
@@ -187,6 +189,7 @@ async function endLesson(): Promise<void> {
     pillOverride = 'Generating report...'; render();
     const r = await api.invoke('lesson:end', undefined);
     toast(`Report saved: ${r.reportPath}`, r.reportPath);
+    void refreshHistory();
   } catch (e) {
     showError(`Could not end lesson: ${(e as Error).message}`);
   } finally { pillOverride = undefined; busy = false; render(); }
@@ -198,6 +201,38 @@ startEnd.addEventListener('click', () => {
 });
 $('consentCancel').addEventListener('click', () => { $('consent').hidden = true; });
 $('consentOk').addEventListener('click', () => { $('consent').hidden = true; void beginLesson(); });
+
+// Lesson history
+const historyPanel = $('history');
+const historyBtn = $<HTMLButtonElement>('historyBtn');
+async function refreshHistory(): Promise<void> {
+  if (historyPanel.hidden) return;
+  const studentId = studentSel.value;
+  if (!studentId) { historyPanel.replaceChildren(h('div', 'empty', 'Pick a student.')); return; }
+  try {
+    const items = await api.invoke('lessons:list', { studentId });
+    if (!items.length) { historyPanel.replaceChildren(h('div', 'empty', 'No lessons yet.')); return; }
+    historyPanel.replaceChildren(...items.map(({ lesson, reportPath }) => {
+      const mins = lesson.endedAt ? Math.max(1, Math.round((Date.parse(lesson.endedAt) - Date.parse(lesson.startedAt)) / 60000)) : undefined;
+      const label = `${new Date(lesson.startedAt).toLocaleString()} - ${lesson.subject ?? 'no subject'} - ${mins ? `${mins} min` : 'not finished'}`;
+      const row = h('div', 'item', undefined);
+      row.append(h('span', undefined, label));
+      const b = h('button', 'small', reportPath ? 'Open report' : 'Finish lesson') as HTMLButtonElement;
+      b.addEventListener('click', async () => {
+        b.disabled = true;
+        try {
+          const p = reportPath ?? (await api.invoke('lesson:finish', { studentId, lessonId: lesson.id })).reportPath;
+          if (!reportPath) void refreshHistory();
+          await api.invoke('shell:openPath', p);
+        } catch (e) { showError(`Could not finish lesson: ${(e as Error).message}`); b.disabled = false; }
+      });
+      row.append(b);
+      return row;
+    }));
+  } catch (e) { showError(`Could not load history: ${(e as Error).message}`); }
+}
+historyBtn.addEventListener('click', () => { historyPanel.hidden = !historyPanel.hidden; void refreshHistory(); });
+studentSel.addEventListener('change', () => void refreshHistory());
 
 // Settings
 $('gear').addEventListener('click', () => { const s = $('settings'); s.hidden = !s.hidden; });

@@ -132,35 +132,7 @@ export class LessonSession {
     this.status = 'ending';
     this.emit();
     try {
-      const { storage, reports } = this.deps;
-      const student = this.student;
-      let lesson = this.lesson;
-      const priorMemory = await storage.getMemory(student.id);
-      const memoryOn = student.memoryEnabled !== false;
-      const priorContext = memoryOn ? tailAtLine(await storage.getStudentContext(student.id), MAX_CONTEXT_CHARS) || undefined : undefined;
-      const report = await reports.generate({
-        lesson, student, transcript: this.transcript, priorMemory,
-        includePriorInPrompt: memoryOn,
-        ...(priorContext ? { priorContext } : {}),
-      });
-      lesson = { ...lesson, endedAt: new Date((this.deps.now ?? Date.now)()).toISOString() };
-      const md = reports.renderMarkdown({ lesson, student, report, transcript: this.transcript });
-      const reportPath = await storage.saveReport(student.id, lesson.id, md, report);
-      await storage.saveMemory({
-        studentId: student.id,
-        concepts: report.concepts,
-        lessonSummaries: [
-          ...priorMemory.lessonSummaries,
-          { lessonId: lesson.id, date: lesson.endedAt!.slice(0, 10), summary: report.lessonSummary },
-        ],
-      });
-      await storage.saveLesson(lesson);
-      // Memory is always recorded; the toggle only controls whether it is read.
-      const d = new Date(lesson.startedAt);
-      const pad = (n: number): string => String(n).padStart(2, '0');
-      const localDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-      const keys = report.concepts.filter((c) => c.lastLessonId === lesson.id).map((c) => `${c.name} (${c.status})`).slice(0, 10).join(', ') || 'none';
-      await storage.appendStudentContext(student.id, `## ${localDate} - ${lesson.subject ?? 'no subject'}\n${report.lessonSummary}\nKey concepts: ${keys}\n`);
+      const r = await this.completeLesson(this.student, this.lesson, this.transcript);
       this.deps.screen.stop();
       this.lesson = undefined;
       this.student = undefined;
@@ -169,11 +141,62 @@ export class LessonSession {
       this.transcriberStatus = 'Idle';
       this.status = 'idle';
       this.emit();
-      return { reportPath, lesson };
+      return r;
     } catch (e) {
       this.status = 'running';
       this.emit();
       throw e;
+    }
+  }
+
+  private async completeLesson(student: Student, lesson0: Lesson, transcript: TranscriptSegment[], endedAt?: string): Promise<{ reportPath: string; lesson: Lesson }> {
+    const { storage, reports } = this.deps;
+    let lesson = lesson0;
+    const priorMemory = await storage.getMemory(student.id);
+    const memoryOn = student.memoryEnabled !== false;
+    const priorContext = memoryOn ? tailAtLine(await storage.getStudentContext(student.id), MAX_CONTEXT_CHARS) || undefined : undefined;
+    const report = await reports.generate({
+      lesson, student, transcript, priorMemory,
+      includePriorInPrompt: memoryOn,
+      ...(priorContext ? { priorContext } : {}),
+    });
+    lesson = { ...lesson, endedAt: endedAt ?? new Date((this.deps.now ?? Date.now)()).toISOString() };
+    const md = reports.renderMarkdown({ lesson, student, report, transcript });
+    const reportPath = await storage.saveReport(student.id, lesson.id, md, report);
+    await storage.saveMemory({
+      studentId: student.id,
+      concepts: report.concepts,
+      lessonSummaries: [
+        ...priorMemory.lessonSummaries,
+        { lessonId: lesson.id, date: lesson.endedAt!.slice(0, 10), summary: report.lessonSummary },
+      ],
+    });
+    await storage.saveLesson(lesson);
+    // Memory is always recorded; the toggle only controls whether it is read.
+    const d = new Date(lesson.startedAt);
+    const pad = (n: number): string => String(n).padStart(2, '0');
+    const localDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const keys = report.concepts.filter((c) => c.lastLessonId === lesson.id).map((c) => `${c.name} (${c.status})`).slice(0, 10).join(', ') || 'none';
+    await storage.appendStudentContext(student.id, `## ${localDate} - ${lesson.subject ?? 'no subject'}\n${report.lessonSummary}\nKey concepts: ${keys}\n`);
+    return { reportPath, lesson };
+  }
+
+  async finishInterrupted(studentId: string, lessonId: string): Promise<string> {
+    if (this.status !== 'idle') throw new Error('Cannot finish a lesson while another is active');
+    const { storage } = this.deps;
+    const lesson = await storage.getLesson(studentId, lessonId);
+    const student = await storage.getStudent(studentId);
+    if (!lesson || !student) throw new Error('Lesson not found');
+    const transcript = await storage.getTranscript(studentId, lessonId);
+    const lastEnd = transcript.length ? transcript[transcript.length - 1].endMs : 0;
+    const endedAt = lesson.endedAt ?? new Date(lastEnd > Date.parse(lesson.startedAt) ? lastEnd : (this.deps.now ?? Date.now)()).toISOString();
+    this.status = 'ending';
+    this.emit();
+    try {
+      return (await this.completeLesson(student, lesson, transcript, endedAt)).reportPath;
+    } finally {
+      this.status = 'idle';
+      this.emit();
     }
   }
 }

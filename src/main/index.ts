@@ -1,5 +1,6 @@
 import { app, BrowserWindow, desktopCapturer, globalShortcut, ipcMain, protocol, session, shell } from 'electron';
 import * as path from 'node:path';
+import { existsSync } from 'node:fs';
 import { promises as fs } from 'node:fs';
 import type { IpcInvoke, IpcInvokeChannel } from '../shared/ipc';
 import {
@@ -127,6 +128,14 @@ async function main(): Promise<void> {
     return l;
   });
   handle('lesson:end', async () => { try { return await lesson.end(); } finally { screen.stop(); } });
+  handle('lessons:list', async ({ studentId }) => {
+    const all = await storage.listLessons(studentId);
+    return all.sort((a, b) => b.id.localeCompare(a.id)).map((l) => {
+      const p = storage.reportPath(studentId, l.id);
+      return { lesson: l, ...(existsSync(p) ? { reportPath: p } : {}) };
+    });
+  });
+  handle('lesson:finish', async ({ studentId, lessonId }) => ({ reportPath: await lesson.finishInterrupted(studentId, lessonId) }));
   handle('transcript:append', (segs) => lesson.appendTranscript(segs));
   handle('transcript:get', () => lesson.getTranscript());
   handle('helpme:ask', ({ windowMinutes, question }) => lesson.helpMe(windowMinutes, question, (partial) => win?.webContents.send('helpme:partial', partial)));

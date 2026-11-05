@@ -15,6 +15,7 @@
     <button id="newStudent" class="small" title="New student">+</button>
     <label style="font-size:12px;white-space:nowrap"><input type="checkbox" id="memory" checked> Use past-lesson memory</label>
     <input id="subject" placeholder="Subject" />
+    <button id="historyBtn" class="small" title="Lesson history">History</button>
     <button id="gear" class="small" title="Settings">&#9881;</button>
   </div>
   <div class="row">
@@ -40,6 +41,7 @@
     <label>Model <select id="sModel"><option value="Xenova/whisper-tiny.en">tiny - fastest</option><option value="Xenova/whisper-base.en">base - more accurate, may lag</option></select></label>
   </div>
 </header>
+<section id="history" class="history" hidden></section>
 <div id="errors"></div>
 <main id="transcript" class="transcript"><div class="empty">Transcript will appear here.</div></main>
 <section id="help" class="help"></section>

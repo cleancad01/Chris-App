@@ -52,6 +52,8 @@ Workflow:
 
 Make sure Zoom plays through the **default** Windows output device, otherwise the Student stream is silent.
 
+**Lesson history:** the **History** button (idle only) lists the selected student's past lessons, newest first, with **Open report**, or **Finish lesson** to generate the report for a lesson that was interrupted (crash/closed early).
+
 ## Environment flags
 
 Set in `.env` or the shell.
@@ -139,6 +141,7 @@ The code was built in a cloud environment with no microphone, speakers or displa
 
 | Component | Verified in cloud build (unit tests/mocks) | Verified on the author's Windows 11 PC (2026-11-05) | Still needs testing on Windows |
 |---|---|---|---|
+| Lesson history panel, finish interrupted lesson | Yes (finish logic only) | | Yes (UI untested on Windows) |
 | Storage (students, lessons, transcripts) | Yes | | |
 | Prompt building | Yes | | |
 | Help-me timeout/retry/fallback logic | Yes | | |

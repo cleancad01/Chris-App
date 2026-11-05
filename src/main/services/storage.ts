@@ -130,6 +130,9 @@ export function createStorage(dataDir: string): Storage {
       await writeJson(path.join(dir, 'report.json'), report);
       return md;
     },
+    reportPath(sid, lid) {
+      return path.join(lDir(safe(sid), safe(lid)), 'report.md');
+    },
     async saveLessonFile(sid, lid, fileName, contents) {
       const dir = lDir(safe(sid), safe(lid));
       await fs.mkdir(dir, { recursive: true });

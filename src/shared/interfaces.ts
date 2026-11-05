@@ -145,6 +145,8 @@ export interface Storage {
 
   /** Writes report.md and report.json; returns the absolute path of report.md. */
   saveReport(studentId: string, lessonId: string, markdown: string, report: LessonReport): Promise<string>;
+  /** Absolute path where report.md lives (may not exist). */
+  reportPath(studentId: string, lessonId: string): string;
   /** Writes a plain-text/markdown file (e.g. raw-transcript.md) next to the lesson files. Returns path. */
   saveLessonFile(studentId: string, lessonId: string, fileName: string, contents: string): Promise<string>;
 }

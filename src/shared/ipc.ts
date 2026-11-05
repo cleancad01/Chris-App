@@ -24,6 +24,9 @@ export interface IpcInvoke {
   'lesson:start': { arg: { studentId: string; subject?: string }; result: Lesson };
   /** Ends the lesson, generates the report, returns the path to report.md. */
   'lesson:end': { arg: void; result: { reportPath: string; lesson: Lesson } };
+  'lessons:list': { arg: { studentId: string }; result: Array<{ lesson: Lesson; reportPath?: string }> };
+  /** Generates the report for an interrupted (never ended) lesson. Only when idle. */
+  'lesson:finish': { arg: { studentId: string; lessonId: string }; result: { reportPath: string } };
   /** Renderer pushes newly transcribed segments; main appends them to transcript.jsonl. */
   'transcript:append': { arg: TranscriptSegment[]; result: void };
   'transcript:get': { arg: void; result: TranscriptSegment[] };

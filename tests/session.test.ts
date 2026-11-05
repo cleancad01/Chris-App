@@ -37,6 +37,7 @@ function fakeStorage() {
     appendTranscript: async (_s, _l, segs) => { transcripts.push(...segs); },
     getTranscript: async () => transcripts,
     saveReport: async (_s, l) => `/mem/${l}/report.md`,
+    reportPath: (_s, l) => `/mem/${l}/report.md`,
     saveLessonFile: async (_s, l, f) => `/mem/${l}/${f}`,
   };
   return s;
@@ -154,5 +155,26 @@ describe('LessonSession', () => {
     const { s } = setup();
     const r = await s.helpMe();
     expect(r.ok).toBe(false);
+  });
+
+  it('finishes an interrupted lesson', async () => {
+    const { s, storage } = setup();
+    await s.start('alex', 'Math');
+    await s.appendTranscript([seg('a', Date.parse('2026-11-05T10:30:00Z'))]);
+    const saved: string[] = [];
+    storage.saveReport = async (_s, l) => { saved.push(l); return `/mem/${l}/report.md`; };
+    const { s: fresh } = setup();
+    // fresh session sharing the same storage
+    const s2 = new LessonSession({
+      storage, helpMe: { ask: async () => { throw new Error('x'); } }, reports: { generate: async () => report, renderMarkdown: () => '# report' },
+      screen: new NoopScreenCapture(), windowSegments: () => [], hasApiKey: () => true,
+    });
+    void fresh;
+    expect(storage.lessons.get('L1')!.endedAt).toBeUndefined();
+    const p = await s2.finishInterrupted('alex', 'L1');
+    expect(p).toBe('/mem/L1/report.md');
+    expect(saved).toEqual(['L1']);
+    expect(storage.lessons.get('L1')!.endedAt).toBe('2026-11-05T10:30:00.000Z');
+    expect(s2.getState().status).toBe('idle');
   });
 });

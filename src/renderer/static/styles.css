@@ -44,3 +44,7 @@ header{padding:8px;border-bottom:1px solid var(--line);display:flex;flex-directi
 .toast[hidden],.modal[hidden],.warn[hidden],.settings[hidden]{display:none}
 .modal{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;padding:16px}
 .dialog{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;max-width:360px}
+.history{max-height:40%;overflow-y:auto;border-bottom:1px solid var(--line);padding:6px 8px;background:var(--panel);font-size:12px}
+.history[hidden]{display:none}
+.history .item{display:flex;gap:8px;align-items:center;padding:3px 0;border-bottom:1px solid var(--line)}
+.history .item span{flex:1}

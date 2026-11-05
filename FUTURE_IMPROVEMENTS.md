@@ -11,8 +11,8 @@ Batch A - felt in every lesson
 4. DONE (2026-11-05) **Default to `Xenova/whisper-tiny.en`** with a model dropdown in settings (tiny kept up in real time on the test PC; base lagged 10-15 s).
 
 Batch B - resilience and convenience
-5. **Lesson history panel**: list a student's past lessons with Open buttons for `report.md` (today only the end-of-lesson toast links to it).
-6. **Finish an interrupted lesson**: the transcript is saved live, but a crash mid-lesson leaves no report; add a "Finish unfinished lesson" action that generates the report from the saved `transcript.jsonl`.
+5. DONE (2026-11-05). **Lesson history panel**: list a student's past lessons with Open buttons for `report.md` (today only the end-of-lesson toast links to it).
+6. DONE (2026-11-05). **Finish an interrupted lesson**: the transcript is saved live, but a crash mid-lesson leaves no report; add a "Finish unfinished lesson" action that generates the report from the saved `transcript.jsonl`.
 
 Free to do, no code
 7. Run `npm run dist` once and install from `release\Tutor Copilot Setup 0.1.0.exe`.
