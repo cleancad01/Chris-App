@@ -14,13 +14,18 @@ const cell = (s: string) => s.replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
 
 export function createReportGenerator(llm: LlmClient, opts: ReportOptions = {}): ReportGenerator {
   return {
-    async generate(input: { lesson: Lesson; student: Student; transcript: TranscriptSegment[]; priorMemory: StudentMemory }): Promise<LessonReport> {
+    async generate(input: { lesson: Lesson; student: Student; transcript: TranscriptSegment[]; priorMemory: StudentMemory; includePriorInPrompt?: boolean; priorContext?: string }): Promise<LessonReport> {
       let parsed = fallbackReport();
       if (llm.isConfigured() && input.transcript.length > 0) {
         const attempts = 1 + (opts.retries ?? LLM.reportRetries);
         for (let i = 0; i < attempts; i++) {
           try {
-            const { system, content } = buildReportPrompt(input);
+            const { system, content } = buildReportPrompt({
+              ...input,
+              priorMemory: input.includePriorInPrompt === false
+                ? { studentId: input.student.id, concepts: [], lessonSummaries: [] }
+                : input.priorMemory,
+            });
             const res = await llm.complete({
               model: opts.model ?? MODELS.report, system, content,
               maxTokens: opts.maxTokens ?? LLM.reportMaxTokens,

@@ -18,6 +18,7 @@ export interface IpcInvoke {
   'settings:get': { arg: void; result: Settings };
   'settings:set': { arg: Partial<Settings>; result: Settings };
   'students:list': { arg: void; result: Student[] };
+  'students:update': { arg: { studentId: string; memoryEnabled: boolean }; result: Student };
   'students:create': { arg: { name: string }; result: Student };
   /** Starts a lesson (after the consent dialog was accepted in the renderer). */
   'lesson:start': { arg: { studentId: string; subject?: string }; result: Lesson };

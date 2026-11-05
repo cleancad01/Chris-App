@@ -92,6 +92,7 @@ The app pins Electron's userData folder to `%APPDATA%\tutor-copilot` in both dev
   settings.json
   students/<studentId>/student.json
   students/<studentId>/concepts.json                     per-student concept memory
+  students/<studentId>/context.md                        per-lesson context blurbs (editable)
   students/<studentId>/lessons/<lessonId>/lesson.json
   students/<studentId>/lessons/<lessonId>/transcript.jsonl   appended live
   students/<studentId>/lessons/<lessonId>/report.md
@@ -99,6 +100,12 @@ The app pins Electron's userData folder to `%APPDATA%\tutor-copilot` in both dev
 ```
 
 `report.md` contains: Overview, What the student learned, Not yet learned, Where they struggled, Suggested next steps, Concept roadmap, and the Full transcript.
+
+## How memory works
+
+Every Help-me call and report is a stateless API request: there is no chat history. What is sent each Help-me press is the recent transcript window, the latest screenshot, the lesson's running summary and, when the student's **Use past-lesson memory** checkbox is on (the default), up to 30 concepts (most recently used first), the last 3 lesson summaries and the tail of `context.md` (max 1500 characters, cut at a line boundary). With the checkbox off, none of that is sent (only concepts first seen in the current lesson) and the end-of-lesson report is also written without prior memory. The toggle is per student and locked during a lesson.
+
+At the end of every lesson a short entry (date, subject, summary, key concepts) is appended to `students/<id>/context.md`, whatever the toggle says, so memory is always recorded and only optionally read. You can edit that file freely; the tail is read at the start of each lesson when memory is on. `concepts.json` is always fully updated.
 
 ## Building an installer
 

@@ -1,7 +1,7 @@
 import { createAudioSources } from './audio';
 import { createTranscriber } from './transcriber';
 import type { AudioSource, Transcriber } from '../shared/interfaces';
-import type { AppState, AudioChunk, Settings, TranscriptSegment } from '../shared/types';
+import type { AppState, AudioChunk, Settings, Student, TranscriptSegment } from '../shared/types';
 import { $, h } from './ui/dom';
 import { TranscriptView } from './ui/transcriptView';
 import { HelpPanel } from './ui/helpPanel';
@@ -48,7 +48,7 @@ function render(): void {
   startEnd.textContent = running ? 'End lesson' : state.status === 'ending' ? 'Ending...' : 'Start lesson';
   startEnd.classList.toggle('primary', !running);
   startEnd.disabled = busy || state.status === 'ending';
-  studentSel.disabled = subject.disabled = state.status !== 'idle';
+  studentSel.disabled = subject.disabled = memoryChk.disabled = state.status !== 'idle';
   const pill = $('pill');
   pill.textContent = pillOverride ?? (state.status === 'idle' ? 'Idle' : state.transcriberStatus);
   pill.classList.toggle('live', running && state.transcriberReady);
@@ -57,10 +57,28 @@ function render(): void {
   $('mStudent').style.width = `${Math.min(100, state.audioLevels.student * 300)}%`;
 }
 
+const memoryChk = $<HTMLInputElement>('memory');
+let studentList: Student[] = [];
+function syncMemory(): void {
+  const s = studentList.find((x) => x.id === studentSel.value);
+  memoryChk.checked = s?.memoryEnabled !== false;
+}
+studentSel.addEventListener('change', syncMemory);
+memoryChk.addEventListener('change', async () => {
+  const studentId = studentSel.value;
+  if (!studentId) return;
+  try {
+    await api.invoke('students:update', { studentId, memoryEnabled: memoryChk.checked });
+    await loadStudents(studentId);
+  } catch (e) { showError(`Could not update student: ${(e as Error).message}`); syncMemory(); }
+});
+
 async function loadStudents(select?: string): Promise<void> {
   const list = await api.invoke('students:list', undefined);
+  studentList = list;
   studentSel.replaceChildren(...list.map((s) => { const o = document.createElement('option'); o.value = s.id; o.textContent = s.name; return o; }));
   if (select) studentSel.value = select;
+  syncMemory();
 }
 
 // Electron does not support window.prompt(), so use an inline dialog.

@@ -32,6 +32,8 @@ export interface Student {
   name: string;
   createdAt: string; // ISO date-time
   notes?: string;
+  /** Include memory of past lessons in Help-me and reports. Default true when undefined. */
+  memoryEnabled?: boolean;
 }
 
 export type ConceptStatus = 'introduced' | 'practiced' | 'mastered' | 'struggling';
@@ -85,6 +87,8 @@ export interface LessonContext {
   concepts: Concept[];
   /** Summaries of previous lessons with this student, most recent first, at most a handful. */
   priorLessonSummaries: LessonSummaryEntry[];
+  /** Tail of the student's master context file (context.md); only set when memory is on. */
+  priorContext?: string;
 }
 
 export interface HelpMeRequest {

@@ -61,6 +61,23 @@ export function createStorage(dataDir: string): Storage {
     getStudent(id) {
       return readJson<Student>(path.join(sDir(safe(id)), 'student.json'));
     },
+    async saveStudent(student) {
+      await writeJson(path.join(sDir(safe(student.id)), 'student.json'), student);
+    },
+    async appendStudentContext(id, entry) {
+      const file = path.join(sDir(safe(id)), 'context.md');
+      await fs.mkdir(path.dirname(file), { recursive: true });
+      let exists = true;
+      try { await fs.access(file); } catch { exists = false; }
+      if (!exists) {
+        const st = await readJson<Student>(path.join(sDir(id), 'student.json'));
+        await fs.writeFile(file, `# Context for ${st?.name ?? id}\n\nOne entry per lesson, newest at the bottom. Edit freely; the tail of this file is read at the start of each lesson when memory is on.\n`, 'utf8');
+      }
+      await fs.appendFile(file, `\n${entry.endsWith('\n') ? entry : entry + '\n'}`, 'utf8');
+    },
+    async getStudentContext(id) {
+      try { return await fs.readFile(path.join(sDir(safe(id)), 'context.md'), 'utf8'); } catch { return ''; }
+    },
     async getMemory(id) {
       const m = await readJson<StudentMemory>(path.join(sDir(safe(id)), 'concepts.json'));
       return { studentId: id, concepts: m?.concepts ?? [], lessonSummaries: m?.lessonSummaries ?? [] };

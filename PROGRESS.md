@@ -12,6 +12,7 @@
 - [x] Tier 3 polish: electron-builder NSIS installer (`npm run dist`), window-size presets (`window:setSize`), local model note in settings, `.env` also read next to the exe.
 - [x] Transcription latency: one Whisper worker per speaker, per-speaker queue cap 2 (drop oldest, pill shows backlog/drops), 4 s chunks, multi-threaded WASM via COOP/COEP on `app://`, no `chunk_length_s` for <30 s input.
 - [x] Final polish: system-wide F9 (globalShortcut), Help-me thinking off + streaming partial answer, smaller screenshot/max tokens, bigger default window (520x860) and help-panel layout fixes.
+- [x] Per-student memory toggle (`Student.memoryEnabled`, `students:update`), `context.md` master context appended at lesson end and read (tail, 1500 chars) by Help-me/report when on; Help-me concepts capped at 30.
 
 ## Decisions
 - Renderer is served via custom `app://tutor/` scheme (privileged, secure) with an explicit extension->MIME map and path-traversal guard, because file:// origins are opaque and cannot use the Cache API.
@@ -29,6 +30,7 @@
 - Global F9 is registered in main (`globalShortcut`) and sent to the renderer as `helpme:trigger`; it does not focus the window, so Zoom keeps focus.
 - Thinking is turned off for Help-me via `thinking: { type: 'between_tools' }` (valid on claude-sonnet-5-5 with effort low); reports unchanged.
 - Help-me streams: raw JSON text is accumulated and the `answer` field is extracted incrementally (`extractPartialAnswer`) and pushed as `helpme:partial`; the final result replaces it, partial resets on retry.
+- Memory is always recorded (context.md, concepts.json) and only optionally read; `ReportGenerator.generate` takes `includePriorInPrompt` so merging still uses real memory when the prompt omits it.
 
 ## Next
 - Waiting for the user's `npm run capture-test` output from Windows; fix mic/loopback/Whisper issues it reveals.

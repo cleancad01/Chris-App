@@ -37,6 +37,20 @@ describe('help-me prompt', () => {
   });
 });
 
+describe('priorContext', () => {
+  it('appears in help-me and report prompts only when provided', () => {
+    const none = (buildHelpMePrompt(req).content.at(-1) as any).text;
+    expect(none).not.toContain('Notes from past lessons');
+    const withCtx = (buildHelpMePrompt({ ...req, context: { ...req.context, priorContext: 'Likes pizza fractions' } }).content.at(-1) as any).text;
+    expect(withCtx).toContain('Notes from past lessons:\nLikes pizza fractions');
+    const r = buildReportPrompt({
+      lesson: { id: 'L', studentId: 's', startedAt: '2026-11-05T10:00:00Z' }, student: { id: 's', name: 'Alex', createdAt: '' },
+      transcript: req.transcript, priorMemory: { studentId: 's', concepts: [], lessonSummaries: [] }, priorContext: 'Likes pizza fractions',
+    });
+    expect((r.content[0] as any).text).toContain('Likes pizza fractions');
+  });
+});
+
 describe('parseHelpMeResponse', () => {
   const good = { answer: 'x=2', confidence: 'High', overview: 'o', connections: [{ concept: 'c', relation: 'r', source: 'new' }], updatedRunningSummary: 's' };
   it('parses plain and fenced JSON', () => {

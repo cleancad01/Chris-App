@@ -13,13 +13,17 @@ function fakeStorage() {
   const transcripts: TranscriptSegment[] = [];
   const student: Student = { id: 'alex', name: 'Alex', createdAt: '2026-01-01T00:00:00Z' };
   let settings: Settings = { ...DEFAULT_SETTINGS };
-  const s: Storage & { lessons: typeof lessons; transcripts: typeof transcripts; memories: typeof memories } = {
-    dataDir: '/mem', lessons, transcripts, memories,
+  const ctx = { text: '' };
+  const s: Storage & { lessons: typeof lessons; transcripts: typeof transcripts; memories: typeof memories; student: Student; ctx: typeof ctx } = {
+    dataDir: '/mem', lessons, transcripts, memories, student, ctx,
     getSettings: async () => settings,
     saveSettings: async (x) => { settings = x; },
     listStudents: async () => [student],
     createStudent: async (name) => ({ ...student, name }),
     getStudent: async (id) => (id === 'alex' ? student : undefined),
+    saveStudent: async (x) => { Object.assign(student, x); },
+    appendStudentContext: async (_id, entry) => { ctx.text += (ctx.text ? '\n' : '# Context\n') + entry; },
+    getStudentContext: async () => ctx.text,
     getMemory: async (id) => memories.get(id) ?? { studentId: id, concepts: [], lessonSummaries: [] },
     saveMemory: async (m) => { memories.set(m.studentId, m); },
     createLesson: async (studentId, subject) => {
@@ -55,8 +59,9 @@ function setup() {
       return { ok: true, response: { answer: 'a', confidence: 'High', overview: 'o', connections: [], updatedRunningSummary: 'new summary', createdAt: 1 } };
     },
   };
+  const generateInputs: Array<{ includePriorInPrompt?: boolean; priorContext?: string }> = [];
   const reports: ReportGenerator = {
-    generate: async () => report,
+    generate: async (input) => { generateInputs.push(input); return report; },
     renderMarkdown: () => '# report',
   };
   const s = new LessonSession({
@@ -64,7 +69,7 @@ function setup() {
     windowSegments: (segs, min, now) => segs.filter((x) => x.endMs >= now - min * 60_000),
     hasApiKey: () => true,
   });
-  return { s, storage, requests };
+  return { s, storage, requests, generateInputs };
 }
 
 describe('LessonSession', () => {
@@ -96,6 +101,53 @@ describe('LessonSession', () => {
     expect(storage.memories.get('alex')!.lessonSummaries[0].summary).toBe('Did fractions.');
     expect(states).toContain('ending');
     expect(s.getState().status).toBe('idle');
+  });
+
+  const oldConcept = (name: string, last: string) => ({ name, description: '', status: 'practiced' as const, firstLessonId: 'a', lastLessonId: last });
+
+  it('memory on: context has concepts and priorContext; context.md appended', async () => {
+    const { s, storage, requests, generateInputs } = setup();
+    storage.memories.set('alex', {
+      studentId: 'alex',
+      concepts: Array.from({ length: 40 }, (_, i) => oldConcept(`C${i}`, `A${String(i).padStart(2, '0')}`)),
+      lessonSummaries: [1, 2, 3, 4].map((i) => ({ lessonId: `A${i}`, date: '2026-10-0' + i, summary: `s${i}` })),
+    });
+    storage.ctx.text = 'line one\n' + 'x'.repeat(2000) + '\nlast line';
+    await s.start('alex', 'Math');
+    await s.appendTranscript([seg('a', Date.now())]);
+    await s.helpMe();
+    const c = requests[0].context;
+    expect(c.concepts).toHaveLength(30);
+    expect(c.concepts[0].name).toBe('C39');
+    expect(c.priorLessonSummaries.map((p) => p.summary)).toEqual(['s4', 's3', 's2']);
+    expect(c.priorContext!.startsWith('...')).toBe(true);
+    expect(c.priorContext!.length).toBeLessThanOrEqual(1510);
+    expect(c.priorContext).toContain('last line');
+    await s.end();
+    expect(generateInputs[0].includePriorInPrompt).toBe(true);
+    expect(storage.ctx.text).toContain('- Math\nDid fractions.\nKey concepts: Fractions (introduced)');
+  });
+
+  it('memory off: no concepts or prior; context.md still appended', async () => {
+    const { s, storage, requests, generateInputs } = setup();
+    storage.student.memoryEnabled = false;
+    storage.memories.set('alex', {
+      studentId: 'alex', concepts: [oldConcept('Old', 'A1'), oldConcept('Now', 'L1')],
+      lessonSummaries: [{ lessonId: 'A1', date: '2026-10-01', summary: 's1' }],
+    });
+    storage.ctx.text = 'secret notes';
+    await s.start('alex');
+    await s.appendTranscript([seg('a', Date.now())]);
+    await s.helpMe();
+    const c = requests[0].context;
+    expect(c.concepts.map((x) => x.name)).toEqual(['Now']);
+    expect(c.priorLessonSummaries).toEqual([]);
+    expect(c.priorContext).toBeUndefined();
+    await s.end();
+    expect(generateInputs[0].includePriorInPrompt).toBe(false);
+    expect(generateInputs[0].priorContext).toBeUndefined();
+    expect(storage.ctx.text).toContain('no subject');
+    storage.student.memoryEnabled = true;
   });
 
   it('helpMe without lesson returns error result', async () => {

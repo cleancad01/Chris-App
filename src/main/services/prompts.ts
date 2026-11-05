@@ -35,7 +35,7 @@ Subject: ${c.subject ?? 'unknown'}
 Running summary: ${c.runningSummary || '(none yet)'}
 Concepts: ${concepts}
 Prior lessons:
-${prior}
+${prior}${c.priorContext ? `\nNotes from past lessons:\n${c.priorContext}` : ''}
 
 ## Recent transcript
 ${transcript}
@@ -100,7 +100,7 @@ Respond ONLY with a JSON object (no prose, no code fences):
 - lessonSummary: 1-3 sentences for long-term memory.`;
 
 export function buildReportPrompt(input: {
-  lesson: Lesson; student: Student; transcript: TranscriptSegment[]; priorMemory: StudentMemory;
+  lesson: Lesson; student: Student; transcript: TranscriptSegment[]; priorMemory: StudentMemory; priorContext?: string;
 }): { system: string; content: LlmContentBlock[] } {
   const { lesson, student, priorMemory } = input;
   const concepts = priorMemory.concepts.length
@@ -114,7 +114,7 @@ export function buildReportPrompt(input: {
     system: REPORT_SYSTEM,
     content: [{
       type: 'text',
-      text: `Student: ${student.name}\nSubject: ${lesson.subject ?? 'unknown'}\nLesson started: ${lesson.startedAt}${lesson.endedAt ? `\nLesson ended: ${lesson.endedAt}` : ''}\n\n## Prior concepts\n${concepts}\n\n## Prior lesson summaries\n${prior}\n\n## Transcript\n${transcript}\n\nRespond with the JSON object now.`,
+      text: `Student: ${student.name}\nSubject: ${lesson.subject ?? 'unknown'}\nLesson started: ${lesson.startedAt}${lesson.endedAt ? `\nLesson ended: ${lesson.endedAt}` : ''}\n\n## Prior concepts\n${concepts}\n\n## Prior lesson summaries\n${prior}${input.priorContext ? `\n\n## Notes from past lessons\n${input.priorContext}` : ''}\n\n## Transcript\n${transcript}\n\nRespond with the JSON object now.`,
     }],
   };
 }

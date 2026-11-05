@@ -112,6 +112,13 @@ async function main(): Promise<void> {
     return next;
   });
   handle('students:list', () => storage.listStudents());
+  handle('students:update', async ({ studentId, memoryEnabled }) => {
+    const st = await storage.getStudent(studentId);
+    if (!st) throw new Error(`Unknown student: ${studentId}`);
+    const next = { ...st, memoryEnabled };
+    await storage.saveStudent(next);
+    return next;
+  });
   handle('students:create', ({ name }) => storage.createStudent(name));
   handle('lesson:start', async ({ studentId, subject }) => {
     const l = await lesson.start(studentId, subject);

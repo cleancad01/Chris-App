@@ -44,6 +44,20 @@ describe('storage', () => {
     await st.saveMemory(m);
     expect(await st.getMemory(s.id)).toEqual(m);
   });
+  it('saveStudent and context append/get', async () => {
+    const st = createStorage(dir);
+    const s = await st.createStudent('Ctx Kid');
+    await st.saveStudent({ ...s, memoryEnabled: false });
+    expect((await st.getStudent(s.id))!.memoryEnabled).toBe(false);
+    expect(await st.getStudentContext(s.id)).toBe('');
+    await st.appendStudentContext(s.id, '## d1\nOne\n');
+    await st.appendStudentContext(s.id, '## d2\nTwo\n');
+    const txt = await st.getStudentContext(s.id);
+    expect(txt.startsWith('# Context for Ctx Kid\n')).toBe(true);
+    expect(txt.indexOf('## d1')).toBeLessThan(txt.indexOf('## d2'));
+    expect(txt.match(/# Context for/g)).toHaveLength(1);
+  });
+
   it('saveReport and lesson files', async () => {
     const st = createStorage(dir);
     const s = await st.createStudent('Rep');

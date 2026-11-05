@@ -2,7 +2,7 @@ import type {
   HelpMeService, ReportGenerator, ScreenCapture, Storage,
 } from '../shared/interfaces';
 import type {
-  AppState, HelpMeResult, Lesson, Settings, Student, StudentMemory, TranscriptSegment,
+  AppState, Concept, HelpMeResult, LessonSummaryEntry, Lesson, Settings, Student, StudentMemory, TranscriptSegment,
 } from '../shared/types';
 
 export interface SessionDeps {
@@ -13,6 +13,19 @@ export interface SessionDeps {
   windowSegments: (segments: TranscriptSegment[], windowMinutes: number, nowMs: number) => TranscriptSegment[];
   hasApiKey: () => boolean;
   now?: () => number;
+}
+
+const MAX_CONCEPTS = 30;
+const MAX_CONTEXT_CHARS = 1500;
+
+/** Last maxChars of text, cut at a line boundary, prefixed with "..." when cut. */
+function tailAtLine(text: string, maxChars: number): string {
+  const t = text.trim();
+  if (t.length <= maxChars) return t;
+  let tail = t.slice(t.length - maxChars);
+  const nl = tail.indexOf('\n');
+  tail = nl >= 0 ? tail.slice(nl + 1) : tail;
+  return `...\n${tail}`;
 }
 
 export class LessonSession {
@@ -83,6 +96,17 @@ export class LessonSession {
     const now = (this.deps.now ?? Date.now)();
     const windowed = this.deps.windowSegments(this.transcript, windowMinutes ?? settings.transcriptWindowMinutes, now);
     const memory: StudentMemory = await this.deps.storage.getMemory(this.student.id);
+    const memoryOn = this.student.memoryEnabled !== false;
+    let concepts: Concept[];
+    let priorLessonSummaries: LessonSummaryEntry[] = [];
+    let priorContext: string | undefined;
+    if (memoryOn) {
+      concepts = [...memory.concepts].sort((a, b) => b.lastLessonId.localeCompare(a.lastLessonId)).slice(0, MAX_CONCEPTS);
+      priorLessonSummaries = memory.lessonSummaries.slice(-3).reverse();
+      priorContext = tailAtLine(await this.deps.storage.getStudentContext(this.student.id), MAX_CONTEXT_CHARS) || undefined;
+    } else {
+      concepts = memory.concepts.filter((c) => c.lastLessonId === this.lesson!.id);
+    }
     const result = await this.deps.helpMe.ask({
       transcript: windowed,
       screenshot: this.deps.screen.latest(),
@@ -90,8 +114,9 @@ export class LessonSession {
         studentName: this.student.name,
         subject: this.lesson.subject,
         runningSummary: this.lesson.runningSummary,
-        concepts: memory.concepts,
-        priorLessonSummaries: memory.lessonSummaries.slice(-3).reverse(),
+        concepts,
+        priorLessonSummaries,
+        ...(priorContext ? { priorContext } : {}),
       },
     }, onDelta);
     if (result.ok && result.response.updatedRunningSummary?.trim()) {
@@ -110,7 +135,13 @@ export class LessonSession {
       const student = this.student;
       let lesson = this.lesson;
       const priorMemory = await storage.getMemory(student.id);
-      const report = await reports.generate({ lesson, student, transcript: this.transcript, priorMemory });
+      const memoryOn = student.memoryEnabled !== false;
+      const priorContext = memoryOn ? tailAtLine(await storage.getStudentContext(student.id), MAX_CONTEXT_CHARS) || undefined : undefined;
+      const report = await reports.generate({
+        lesson, student, transcript: this.transcript, priorMemory,
+        includePriorInPrompt: memoryOn,
+        ...(priorContext ? { priorContext } : {}),
+      });
       lesson = { ...lesson, endedAt: new Date((this.deps.now ?? Date.now)()).toISOString() };
       const md = reports.renderMarkdown({ lesson, student, report, transcript: this.transcript });
       const reportPath = await storage.saveReport(student.id, lesson.id, md, report);
@@ -123,6 +154,12 @@ export class LessonSession {
         ],
       });
       await storage.saveLesson(lesson);
+      // Memory is always recorded; the toggle only controls whether it is read.
+      const d = new Date(lesson.startedAt);
+      const pad = (n: number): string => String(n).padStart(2, '0');
+      const localDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      const keys = report.concepts.filter((c) => c.lastLessonId === lesson.id).map((c) => `${c.name} (${c.status})`).slice(0, 10).join(', ') || 'none';
+      await storage.appendStudentContext(student.id, `## ${localDate} - ${lesson.subject ?? 'no subject'}\n${report.lessonSummary}\nKey concepts: ${keys}\n`);
       this.deps.screen.stop();
       this.lesson = undefined;
       this.student = undefined;

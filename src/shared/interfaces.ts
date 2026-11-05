@@ -111,6 +111,7 @@ export interface LlmClient {
 //   settings.json
 //   students/<studentId>/student.json
 //   students/<studentId>/concepts.json          (StudentMemory)
+//   students/<studentId>/context.md             (master context: one short entry per lesson, appended at lesson end, user-editable)
 //   students/<studentId>/lessons/<lessonId>/lesson.json
 //   students/<studentId>/lessons/<lessonId>/transcript.jsonl   (one TranscriptSegment per line, appended live)
 //   students/<studentId>/lessons/<lessonId>/report.md
@@ -125,6 +126,11 @@ export interface Storage {
   listStudents(): Promise<Student[]>;
   createStudent(name: string): Promise<Student>;
   getStudent(studentId: string): Promise<Student | undefined>;
+  saveStudent(student: Student): Promise<void>;
+  /** Appends an entry to students/<id>/context.md, creating it with a header first. */
+  appendStudentContext(studentId: string, entry: string): Promise<void>;
+  /** Full text of context.md, '' if missing. */
+  getStudentContext(studentId: string): Promise<string>;
 
   getMemory(studentId: string): Promise<StudentMemory>;
   saveMemory(memory: StudentMemory): Promise<void>;
@@ -159,6 +165,10 @@ export interface ReportGenerator {
     student: Student;
     transcript: TranscriptSegment[];
     priorMemory: StudentMemory;
+    /** When false, prior concepts/summaries are left out of the prompt but still used for merging. Default true. */
+    includePriorInPrompt?: boolean;
+    /** Text of the master context file, added to the prompt when provided. */
+    priorContext?: string;
   }): Promise<LessonReport>;
   /** Renders report.md (report + full transcript). Pure function. */
   renderMarkdown(input: {
